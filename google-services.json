@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "519457047086",
+    "project_id": "caterease-d6592",
+    "storage_bucket": "caterease-d6592.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:519457047086:android:d57f3d7ac378c9568415bf",
+        "android_client_info": {
+          "package_name": "com.manashayoges.caterease"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQinsuBwReSLf_K_0SI42V8ZDAfNR15xU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

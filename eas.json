@@ -1,0 +1,40 @@
+{
+  "cli": {
+    "version": ">= 12.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyB0RWZYAL7LWmYFJ1NKiYUhVyhiDBpFKJg",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "caterease-d6592.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "caterease-d6592",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "caterease-d6592.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "519457047086",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:519457047086:web:900ffee5ac3236b98415bf"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyB0RWZYAL7LWmYFJ1NKiYUhVyhiDBpFKJg",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "caterease-d6592.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "caterease-d6592",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "caterease-d6592.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "519457047086",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:519457047086:web:900ffee5ac3236b98415bf"
+      }
+    },
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyB0RWZYAL7LWmYFJ1NKiYUhVyhiDBpFKJg",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "caterease-d6592.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "caterease-d6592",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "caterease-d6592.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "519457047086",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:519457047086:web:900ffee5ac3236b98415bf"
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "CaterEase",
+    "slug": "caterease",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "caterease",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+  "package": "com.manashayoges.caterease",
+  "adaptiveIcon": {
+    "foregroundImage": "./assets/images/icon.png",
+    "backgroundColor": "#1B4332"
+  }
+},
+"plugins": [
+  "expo-router",
+  "expo-font",
+  "expo-web-browser"
+],
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+ 
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c107575b-0fff-4e95-ba23-2d7b1531acde"
+      }
+    },
+    "owner": "manashayoges"
+  }
+}
