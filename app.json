@@ -12,23 +12,23 @@
       "supportsTablet": true
     },
     "android": {
-  "package": "com.manashayoges.caterease",
-  "adaptiveIcon": {
-    "foregroundImage": "./assets/images/icon.png",
-    "backgroundColor": "#1B4332"
-  }
-},
-"plugins": [
-  "expo-router",
-  "expo-font",
-  "expo-web-browser"
-],
+      "package": "com.manashayoges.caterease",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#1B4332"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser",
+      "@react-native-community/datetimepicker"
+    ],
     "web": {
       "bundler": "metro",
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
- 
     "experiments": {
       "typedRoutes": true
     },

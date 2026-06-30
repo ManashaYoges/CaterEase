@@ -61,19 +61,20 @@ export default function MenuSelectionScreen() {
         <Text style={styles.title}>Menu Selection</Text>
         <Text style={styles.subtitle}>How would you like to begin your event planning today?</Text>
 
-        <TouchableOpacity style={styles.optionCard} onPress={() => router.push('/new-event/build-menu')}>
-          <View style={styles.optionIcon}>
-            <Folder size={28} color="#1B4332" />
-          </View>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>Open Saved Menu</Text>
-            <Text style={styles.optionDesc}>Continue working on your drafts or use a saved template for faster setup.</Text>
-            <TouchableOpacity style={styles.optionAction} onPress={() => router.push('/new-event/build-menu')}>
-              <Text style={styles.optionActionText}>Browse Drafts</Text>
-              <Clock size={14} color="#1B4332" />
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
+        // REPLACE the first optionCard's onPress and the "Browse Drafts" onPress:
+<TouchableOpacity style={styles.optionCard} onPress={() => router.push('/new-event/load-saved-menu')}>
+  <View style={styles.optionIcon}>
+    <Folder size={28} color="#1B4332" />
+  </View>
+  <View style={styles.optionContent}>
+    <Text style={styles.optionTitle}>Open Saved Menu</Text>
+    <Text style={styles.optionDesc}>Continue working on your drafts or use a saved template for faster setup.</Text>
+    <TouchableOpacity style={styles.optionAction} onPress={() => router.push('/new-event/load-saved-menu')}>
+      <Text style={styles.optionActionText}>Browse Drafts</Text>
+      <Clock size={14} color="#1B4332" />
+    </TouchableOpacity>
+  </View>
+</TouchableOpacity>
 
         <TouchableOpacity style={styles.optionCard} onPress={() => router.push('/new-event/build-menu')}>
           <View style={styles.optionIcon}>
@@ -99,7 +100,7 @@ export default function MenuSelectionScreen() {
               <TouchableOpacity
                 key={event.id}
                 style={styles.recentCard}
-                onPress={() => router.push('/new-event/build-menu')}
+                onPress={() => router.push({ pathname: '/new-event/load-saved-menu', params: { autoLoad: event.id } })}
               >
                 <View style={styles.recentIcon}>
                   <View style={styles.docIcon} />

@@ -13,6 +13,8 @@ export default function NewEventLayout() {
         <Stack.Screen name="review-order" />
         <Stack.Screen name="confirm-save" />
         <Stack.Screen name="event-created" />
+        // In app/new-event/_layout.tsx, add:
+        <Stack.Screen name="load-saved-menu" />
       </Stack>
     </NewEventProvider>
   );
