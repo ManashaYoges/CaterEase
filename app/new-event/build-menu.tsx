@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   ActivityIndicator, Image, Alert, TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Trash2, ChevronDown, ChevronRight, Minus, Plus } from 'lucide-react-native';
+import { ArrowLeft, Search, X, Plus, Trash2, ChevronDown, ChevronRight, Users, MapPin } from 'lucide-react-native';
 import { useNewEvent, SelectedMenuItem, DateMenu } from '@/context/NewEventContext';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -13,17 +13,18 @@ import StepIndicator from '@/components/StepIndicator';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 
-const MAIN_MEALS = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
-const SUB_CATS = [
-  { key: 'dessert',  label: 'Desserts' },
-  { key: 'beverage', label: 'Hot/Soft Beverages' },
+const MEAL_CATEGORIES = [
+  { key: 'breakfast', label: 'Breakfast', icon: '🌅', sub: 'Build your breakfast menu' },
+  { key: 'lunch',     label: 'Lunch',     icon: '☀️',  sub: 'Build your lunch menu' },
+  { key: 'dinner',    label: 'Dinner',    icon: '🌙', sub: 'Build your dinner menu' },
+  { key: 'snacks',    label: 'Snacks',    icon: '☕', sub: 'Add evening snacks' },
 ];
 
-type MealTab = 'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks';
+const FILTER_TABS = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
 function formatDate(dateStr: string) {
+  if (!dateStr) return '';
   const d = new Date(dateStr + 'T00:00:00');
   return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`;
 }
@@ -38,14 +39,15 @@ export default function BuildMenuScreen() {
   const currentEventDate = data.eventDates[currentIndex];
   const totalDates = data.eventDates.length;
 
-  const [activeTab, setActiveTab] = useState<MealTab>('Breakfast');
-  const [subPanel, setSubPanel] = useState<string | null>(null);
+  const [activeMeal, setActiveMeal] = useState('breakfast');
+  const [mobilePanel, setMobilePanel] = useState<'left' | 'center' | 'right'>('left');
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<SelectedMenuItem[]>([]);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-  // Per-date guest count — pre-fill from existing dateMenu or fall back to event default
   const [dateGuestCount, setDateGuestCount] = useState<number>(data.guestCount);
+  const [searchText, setSearchText] = useState('');
+  const [filterTab, setFilterTab] = useState('All');
+  const [expandedMealGroups, setExpandedMealGroups] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const load = async () => {
@@ -62,53 +64,110 @@ export default function BuildMenuScreen() {
     load();
   }, [user]);
 
-  // When date index changes, restore saved state for that date
   useEffect(() => {
     const existing = data.dateMenus.find(dm => dm.dateId === currentEventDate?.id);
     setSelectedItems(existing?.selectedItems || []);
     setDateGuestCount(existing?.guestCount ?? data.guestCount);
-    setSubPanel(null);
-    setActiveTab('Breakfast');
-    setExpandedGroups({});
+    setActiveMeal('breakfast');
+    setMobilePanel('left');
+    setExpandedMealGroups({});
   }, [currentIndex]);
 
-  const getMainItems = (tab: string) => {
-    const mealKey = tab.toLowerCase();
-    return menuItems.filter(i => {
-      const cat = i.meal_category || 'main';
-      if (data.menuType === 'veg') return i.meal_type === mealKey && cat === 'main' && i.menu_type === 'veg';
-      return i.meal_type === mealKey && cat === 'main';
-    });
-  };
+  const availableItems = useMemo(() => {
+    let items = menuItems.filter(i =>
+      data.menuType === 'veg' ? i.menu_type === 'veg' : true
+    );
+    if (searchText.trim()) {
+      items = items.filter(i => i.name.toLowerCase().includes(searchText.toLowerCase()));
+    }
+    if (filterTab !== 'All') {
+      const key = filterTab.toLowerCase();
+      if (key === 'desserts') items = items.filter(i => (i.meal_category || 'main') === 'dessert');
+      else if (key === 'beverages') items = items.filter(i => (i.meal_category || 'main') === 'beverage');
+      else items = items.filter(i => i.meal_type === key);
+    }
+    return items;
+  }, [menuItems, searchText, filterTab, data.menuType]);
 
-  const getSubItems = (tab: string, subCat: string) => {
-    const mealKey = tab.toLowerCase();
-    return menuItems.filter(i => {
-      const cat = i.meal_category || 'main';
-      if (data.menuType === 'veg') return i.meal_type === mealKey && cat === subCat && i.menu_type === 'veg';
-      return i.meal_type === mealKey && cat === subCat;
+  // FIX 1: explicit return type on useMemo
+  // FIX 2: icon added to early return path
+const groupedAvailable = useMemo((): { title: string; icon: string; items: MenuItem[] }[] => {
+  // Search path — flat results
+  if (searchText.trim()) {
+    return [{ title: 'Results', icon: '🍴', items: availableItems }];
+  }
+
+  // All tab — show every meal with sub-sections
+  if (filterTab === 'All') {
+    const groups: { title: string; icon: string; items: MenuItem[] }[] = [];
+    MEAL_CATEGORIES.forEach(meal => {
+      const main = availableItems.filter(i =>
+        i.meal_type === meal.key && (i.meal_category || 'main') === 'main'
+      );
+      const desserts = availableItems.filter(i =>
+        i.meal_type === meal.key && (i.meal_category || 'main') === 'dessert'
+      );
+      const beverages = availableItems.filter(i =>
+        i.meal_type === meal.key && (i.meal_category || 'main') === 'beverage'
+      );
+      if (main.length) groups.push({ title: `${meal.label} · Main Course`, icon: meal.icon, items: main });
+      if (desserts.length) groups.push({ title: `${meal.label} · Desserts`, icon: '🍮', items: desserts });
+      if (beverages.length) groups.push({ title: `${meal.label} · Beverages`, icon: '☕', items: beverages });
     });
-  };
+    return groups;
+  }
+
+  // Specific meal tab (Breakfast / Lunch / Dinner / Snacks)
+  // Show 3 sub-sections: Main Course, Desserts, Beverages
+  const meal = MEAL_CATEGORIES.find(m => m.label === filterTab);
+  if (meal) {
+    const groups: { title: string; icon: string; items: MenuItem[] }[] = [];
+    const main = availableItems.filter(i =>
+      i.meal_type === meal.key && (i.meal_category || 'main') === 'main'
+    );
+    const desserts = availableItems.filter(i =>
+      i.meal_type === meal.key && (i.meal_category || 'main') === 'dessert'
+    );
+    const beverages = availableItems.filter(i =>
+      i.meal_type === meal.key && (i.meal_category || 'main') === 'beverage'
+    );
+    groups.push({ title: 'Main Course', icon: meal.icon, items: main });
+groups.push({ title: 'Desserts', icon: '🍮', items: desserts });
+groups.push({ title: 'Beverages', icon: '☕', items: beverages });
+return groups;
+  }
+
+  return [{ title: 'Results', icon: '🍴', items: availableItems }];
+}, [availableItems, searchText, filterTab]);
 
   const isSelected = (itemId: string) => selectedItems.some(s => s.id === itemId);
 
-  const toggleItem = (item: MenuItem) => {
-    if (isSelected(item.id)) {
-      setSelectedItems(prev => prev.filter(s => s.id !== item.id));
-    } else {
-      setSelectedItems(prev => [...prev, { ...item, mealCategory: activeTab }]);
-    }
+  const addItem = (item: MenuItem) => {
+    if (isSelected(item.id)) return;
+    const mealCat = activeMeal.charAt(0).toUpperCase() + activeMeal.slice(1);
+    setSelectedItems(prev => [...prev, {
+      ...item,
+      mealCategory: mealCat,
+      meal_category: (item as any).meal_category || 'main',
+    } as SelectedMenuItem]);
   };
 
-  const getSelectedByMeal = () => {
-    const groups: Record<string, SelectedMenuItem[]> = {};
-    for (const item of selectedItems) {
-      const cat = item.mealCategory.toUpperCase();
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(item);
-    }
-    return groups;
+  const removeItem = (itemId: string) => {
+    setSelectedItems(prev => prev.filter(s => s.id !== itemId));
   };
+
+  const selectedByMeal = useMemo(() => {
+    const groups: Record<string, SelectedMenuItem[]> = {};
+    MEAL_CATEGORIES.forEach(m => { groups[m.key] = []; });
+    selectedItems.forEach(item => {
+      const meal = item.mealCategory.toLowerCase();
+      if (groups[meal] !== undefined) groups[meal].push(item);
+    });
+    return groups;
+  }, [selectedItems]);
+
+  const mealItemCount = (mealKey: string) => (selectedByMeal[mealKey] || []).length;
+  const totalSelected = selectedItems.length;
 
   const clearAll = () => {
     Alert.alert('Clear All', 'Remove all selected items?', [
@@ -117,16 +176,11 @@ export default function BuildMenuScreen() {
     ]);
   };
 
-  const handleNext = () => {
+  const handleReviewAndSave = () => {
     if (selectedItems.length === 0) {
       Alert.alert('No Items', 'Please select at least one menu item.');
       return;
     }
-    if (!dateGuestCount || dateGuestCount < 1) {
-      Alert.alert('Guest Count', 'Please enter number of guests for this date.');
-      return;
-    }
-
     const newDateMenu: DateMenu = {
       dateId: currentEventDate.id,
       selectedItems,
@@ -136,9 +190,7 @@ export default function BuildMenuScreen() {
       ...data.dateMenus.filter(dm => dm.dateId !== currentEventDate.id),
       newDateMenu,
     ];
-
     const isLastDate = currentIndex >= totalDates - 1;
-
     if (isLastDate) {
       update({ dateMenus: updatedDateMenus, selectedItems });
       router.push('/new-event/review-order');
@@ -147,263 +199,395 @@ export default function BuildMenuScreen() {
     }
   };
 
-  const selectedGroups = getSelectedByMeal();
-
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <ArrowLeft size={20} color="#374151" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Build Menu</Text>
-        <View style={{ width: 40 }} />
+        <Text style={styles.headerTitle}>Menu Builder</Text>
+        <View style={styles.headerRight}>
+          <View style={styles.metaChip}>
+            <Users size={11} color="#6B7280" />
+            <Text style={styles.metaChipText} numberOfLines={1}>{dateGuestCount}</Text>
+          </View>
+          <View style={styles.metaChip}>
+            <MapPin size={11} color="#6B7280" />
+            <Text style={styles.metaChipText} numberOfLines={1}>{(data.venue || 'Venue').split(',')[0]}</Text>
+          </View>
+          <TouchableOpacity style={styles.reviewBtn} onPress={handleReviewAndSave}>
+            <Text style={styles.reviewBtnText}>
+              {currentIndex < totalDates - 1 ? 'Next →' : 'Review & Save →'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <StepIndicator current={3} total={4} />
+      {totalDates > 1 && (
+        <View style={styles.dateBanner}>
+          <View style={styles.dateBannerLeft}>
+            <Text style={styles.dateBannerEmoji}>📅</Text>
+            <Text style={styles.dateBannerDate}>{formatDate(currentEventDate?.date || '')}</Text>
+          </View>
+          <Text style={styles.dateBannerProgress}>{currentIndex + 1} / {totalDates}</Text>
+        </View>
+      )}
 
-      {/* Date progress banner */}
-      <View style={styles.dateBanner}>
-        <Text style={styles.dateBannerText}>
-          📅 <Text style={styles.dateBannerDate}>{formatDate(currentEventDate?.date || '')}</Text>
-        </Text>
-        <Text style={styles.dateBannerProgress}>{currentIndex + 1} / {totalDates}</Text>
+      <View style={styles.panelTabs}>
+        {(['left', 'center', 'right'] as const).map((panel, i) => {
+          const labels = ['1 Meal', '2 Selected', '3 Available'];
+          const isActive = mobilePanel === panel;
+          return (
+            <TouchableOpacity
+              key={panel}
+              style={[styles.panelTab, isActive && styles.panelTabActive]}
+              onPress={() => setMobilePanel(panel)}
+            >
+              <Text style={[styles.panelTabText, isActive && styles.panelTabTextActive]}>
+                {labels[i]}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      {/* ── LEFT PANEL ── */}
+      {mobilePanel === 'left' && (
+        <View style={styles.panelContainer}>
+          <View style={styles.panelHeader}>
+            <Text style={styles.panelTitle}>Select Meal Category</Text>
+            <Text style={styles.panelSub}>Choose a meal to build your menu</Text>
+          </View>
 
-        {/* Guest count for this date */}
-        <View style={styles.guestCountCard}>
-          <Text style={styles.guestCountLabel}>
-            Guests for {formatDate(currentEventDate?.date || '')}
-          </Text>
-          <View style={styles.counterRow}>
-            <TouchableOpacity
-              style={styles.counterBtn}
-              onPress={() => setDateGuestCount(g => Math.max(1, g - 10))}
-            >
-              <Minus size={16} color="#374151" />
-            </TouchableOpacity>
-            <TextInput
-              style={styles.counterInput}
-              value={String(dateGuestCount)}
-              onChangeText={t => setDateGuestCount(parseInt(t.replace(/\D/g, '') || '1', 10))}
-              keyboardType="numeric"
-              textAlign="center"
-            />
-            <TouchableOpacity
-              style={styles.counterBtn}
-              onPress={() => setDateGuestCount(g => g + 10)}
-            >
-              <Plus size={16} color="#374151" />
-            </TouchableOpacity>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {MEAL_CATEGORIES.map(meal => (
+              <TouchableOpacity
+                key={meal.key}
+                style={[styles.mealItem, activeMeal === meal.key && styles.mealItemActive]}
+                onPress={() => {
+                  setActiveMeal(meal.key);
+                  setFilterTab(meal.label);
+                  setMobilePanel('right');
+                }}
+              >
+                <View style={[styles.mealIconBox, activeMeal === meal.key && styles.mealIconBoxActive]}>
+                  <Text style={styles.mealIcon}>{meal.icon}</Text>
+                </View>
+                <View style={styles.mealItemInfo}>
+                  <Text style={[styles.mealItemLabel, activeMeal === meal.key && styles.mealItemLabelActive]}>
+                    {meal.label}
+                  </Text>
+                  <Text style={styles.mealItemSub}>{meal.sub}</Text>
+                </View>
+                {mealItemCount(meal.key) > 0 && (
+                  <View style={styles.mealBadge}>
+                    <Text style={styles.mealBadgeText}>{mealItemCount(meal.key)}</Text>
+                  </View>
+                )}
+                <ChevronRight size={16} color={activeMeal === meal.key ? '#1B4332' : '#D1D5DB'} />
+              </TouchableOpacity>
+            ))}
+
+            <View style={styles.tipBox}>
+              <Text style={styles.tipEmoji}>💡</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.tipTitle}>Tip</Text>
+                <Text style={styles.tipText}>
+                  Select a meal, then tap + in Available Items to add dishes including desserts and beverages — they'll appear under that meal.
+                </Text>
+              </View>
+            </View>
+            <View style={{ height: 80 }} />
+          </ScrollView>
+
+          <View style={styles.totalBar}>
+            <Text style={styles.totalBarLabel}>Total Items Selected</Text>
+            <Text style={styles.totalBarValue}>{totalSelected} Items</Text>
           </View>
         </View>
+      )}
 
-        {/* Available Items */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Available Items</Text>
-            <Text style={styles.dragHint}>Tap to add</Text>
+      {/* ── CENTER PANEL ── */}
+      {mobilePanel === 'center' && (
+        <View style={styles.panelContainer}>
+          <View style={styles.panelHeaderRow}>
+            <View>
+              <Text style={styles.panelTitle}>Your Selected Menu</Text>
+              <Text style={styles.panelSub}>Tap × to remove items</Text>
+            </View>
+            {totalSelected > 0 && (
+              <TouchableOpacity style={styles.clearBtn} onPress={clearAll}>
+                <Trash2 size={13} color="#DC2626" />
+                <Text style={styles.clearBtnText}>Clear All</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
-            {MAIN_MEALS.map(tab => (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {MEAL_CATEGORIES.map(meal => {
+              const items = selectedByMeal[meal.key] || [];
+              if (items.length === 0) return null;
+              const isExp = expandedMealGroups[meal.key] !== false;
+              return (
+                <View key={meal.key} style={styles.selectedGroup}>
+                  <TouchableOpacity
+                    style={styles.selectedGroupHeader}
+                    onPress={() => setExpandedMealGroups(p => ({ ...p, [meal.key]: !isExp }))}
+                  >
+                    <Text style={styles.selectedGroupIcon}>{meal.icon}</Text>
+                    <Text style={styles.selectedGroupLabel}>{meal.label}</Text>
+                    <View style={styles.selectedGroupBadge}>
+                      <Text style={styles.selectedGroupBadgeText}>{items.length} Items</Text>
+                    </View>
+                    {isExp ? <ChevronDown size={15} color="#374151" /> : <ChevronRight size={15} color="#374151" />}
+                  </TouchableOpacity>
+
+                  {isExp && items.map(item => (
+                    <View key={item.id} style={styles.selectedItem}>
+                      <Image
+                        source={{ uri: item.image_url || 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg' }}
+                        style={styles.selectedItemImg}
+                      />
+                      <View style={styles.selectedItemInfo}>
+                        <Text style={styles.selectedItemName} numberOfLines={1}>{item.name}</Text>
+                        {(item as any).meal_category && (item as any).meal_category !== 'main' && (
+                          <Text style={styles.selectedItemSub}>
+                            {(item as any).meal_category === 'dessert' ? '🍮 Dessert' : '☕ Beverage'}
+                          </Text>
+                        )}
+                      </View>
+                      <TouchableOpacity style={styles.removeBtn} onPress={() => removeItem(item.id)}>
+                        <X size={13} color="#9CA3AF" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              );
+            })}
+
+            {totalSelected === 0 && (
+              <View style={styles.emptyCenter}>
+                <Text style={styles.emptyCenterEmoji}>🍽️</Text>
+                <Text style={styles.emptyCenterTitle}>No items selected yet</Text>
+                <Text style={styles.emptyCenterSub}>Go to Available Items to add dishes</Text>
+                <TouchableOpacity style={styles.browseBtn} onPress={() => setMobilePanel('right')}>
+                  <Text style={styles.browseBtnText}>Browse Available Items</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            <View style={{ height: 16 }} />
+          </ScrollView>
+
+          <View style={styles.summaryBar}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.summaryScroll}>
+              {MEAL_CATEGORIES.map(meal => (
+                <View key={meal.key} style={styles.summaryItem}>
+                  <Text style={styles.summaryItemIcon}>{meal.icon}</Text>
+                  <Text style={styles.summaryItemLabel}>{meal.label}</Text>
+                  <Text style={styles.summaryItemCount}>{mealItemCount(meal.key)} Items</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
+
+      {/* ── RIGHT PANEL ── */}
+      {mobilePanel === 'right' && (
+        <View style={styles.panelContainer}>
+          <View style={styles.searchBox}>
+            <Search size={15} color="#9CA3AF" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search items..."
+              placeholderTextColor="#9CA3AF"
+              value={searchText}
+              onChangeText={setSearchText}
+            />
+            {searchText.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchText('')}>
+                <X size={15} color="#9CA3AF" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+          >
+            {FILTER_TABS.map(tab => (
               <TouchableOpacity
                 key={tab}
-                style={[styles.tab, activeTab === tab && styles.tabActive]}
-                onPress={() => { setActiveTab(tab as MealTab); setSubPanel(null); }}
+                style={[styles.filterPill, filterTab === tab && styles.filterPillActive]}
+                onPress={() => {
+  setFilterTab(tab);
+  const meal = MEAL_CATEGORIES.find(m => m.label === tab);
+  if (meal) setActiveMeal(meal.key);
+}}
               >
-                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
+                <Text style={[styles.filterPillText, filterTab === tab && styles.filterPillTextActive]}>
+                  {tab}
+                </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
+          <View style={styles.activeMealBanner}>
+            <Text style={styles.activeMealText}>
+              Adding to:{' '}
+              <Text style={styles.activeMealBold}>
+                {MEAL_CATEGORIES.find(m => m.key === activeMeal)?.label}
+              </Text>
+            </Text>
+            <TouchableOpacity onPress={() => setMobilePanel('left')}>
+              <Text style={styles.changeMealText}>Change</Text>
+            </TouchableOpacity>
+          </View>
+
           {loading ? (
-            <ActivityIndicator color="#1B4332" style={{ marginVertical: 20 }} />
+            <ActivityIndicator color="#1B4332" style={{ marginTop: 40 }} />
           ) : (
-            <>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.itemsRow}>
-                {getMainItems(activeTab).map(item => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[styles.itemChip, isSelected(item.id) && styles.itemChipSelected]}
-                    onPress={() => toggleItem(item)}
-                  >
-                    <Image
-                      source={{ uri: item.image_url || 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg' }}
-                      style={styles.itemImage}
-                    />
-                    <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                    {isSelected(item.id) && <View style={styles.selectedDot} />}
-                  </TouchableOpacity>
-                ))}
-                {getMainItems(activeTab).length === 0 && (
-                  <Text style={styles.emptyTabText}>No main dishes for {activeTab}</Text>
-                )}
-              </ScrollView>
-
-              {/* Sub-category buttons */}
-              <View style={styles.subCatRow}>
-                {SUB_CATS.map(cat => {
-                  const catItems = getSubItems(activeTab, cat.key);
-                  if (catItems.length === 0) return null;
-                  const isOpen = subPanel === cat.key;
-                  const selectedCount = selectedItems.filter(
-                    s => s.mealCategory === activeTab && ((s as any).meal_category || 'main') === cat.key
-                  ).length;
-                  return (
-                    <TouchableOpacity
-                      key={cat.key}
-                      style={[styles.subCatBtn, (isOpen || selectedCount > 0) && styles.subCatBtnActive]}
-                      onPress={() => setSubPanel(isOpen ? null : cat.key)}
-                    >
-                      <Text style={[styles.subCatText, (isOpen || selectedCount > 0) && styles.subCatTextActive]}>
-                        {cat.label}{selectedCount > 0 ? ` (${selectedCount})` : ''}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* Sub-category individual dish panel */}
-              {subPanel && (
-                <View style={styles.subPanel}>
-                  <Text style={styles.subPanelTitle}>
-                    {SUB_CATS.find(c => c.key === subPanel)?.label} — {activeTab}
-                  </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {getSubItems(activeTab, subPanel).map(item => (
-                      <TouchableOpacity
-                        key={item.id}
-                        style={[styles.itemChip, isSelected(item.id) && styles.itemChipSelected]}
-                        onPress={() => toggleItem(item)}
-                      >
-                        <Image
-                          source={{ uri: item.image_url || 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg' }}
-                          style={styles.itemImage}
-                        />
-                        <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                        {isSelected(item.id) && <View style={styles.selectedDot} />}
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-            </>
-          )}
-        </View>
-
-        {/* Selected Menu */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Selected Menu</Text>
-          <Text style={styles.sectionSubtitle}>Tap items to remove</Text>
-
-          {Object.keys(selectedGroups).length === 0 && (
-            <Text style={styles.emptyTabText}>No items selected yet</Text>
-          )}
-
-          {Object.entries(selectedGroups).map(([group, items]) => {
-            const isExpanded = expandedGroups[group] !== false;
-            return (
-              <View key={group} style={styles.group}>
-                <TouchableOpacity
-                  style={styles.groupHeader}
-                  onPress={() => setExpandedGroups(prev => ({ ...prev, [group]: !isExpanded }))}
-                >
-                  <View style={styles.groupDot} />
-                  <Text style={styles.groupTitle}>{group} ({items.length})</Text>
-                  {isExpanded
-                    ? <ChevronDown size={16} color="#374151" />
-                    : <ChevronRight size={16} color="#374151" />}
-                </TouchableOpacity>
-                {isExpanded && (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.itemsRow}>
-                    {items.map(item => (
-                      <TouchableOpacity
-                        key={item.id}
-                        style={styles.selectedItemChip}
-                        onPress={() => toggleItem(item)}
-                      >
-                        <Image
-                          source={{ uri: item.image_url || 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg' }}
-                          style={styles.itemImage}
-                        />
-                        <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                )}
-              </View>
-            );
-          })}
-        </View>
-
-        {selectedItems.length > 0 && (
-          <TouchableOpacity style={styles.clearBtn} onPress={clearAll}>
-            <Trash2 size={14} color="#DC2626" />
-            <Text style={styles.clearBtnText}>Clear All</Text>
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
-          <Text style={styles.nextBtnText}>
-            {currentIndex < totalDates - 1
-              ? `Save & Next: ${formatDate(data.eventDates[currentIndex + 1]?.date || '')} →`
-              : 'Next: Review →'}
-          </Text>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.availScroll}>
+              {groupedAvailable.length === 0 ? (
+                <Text style={styles.noResultsText}>No items found</Text>
+              ) : (
+                groupedAvailable.map(group => (
+                  <View key={group.title} style={styles.availGroup}>
+                    <View style={styles.availGroupTitleRow}>
+                      <Text style={styles.availGroupIcon}>{group.icon}</Text>
+                      <Text style={styles.availGroupTitle}>{group.title}</Text>
+                    </View>
+// REPLACE the availGrid block:
+<View style={styles.availGrid}>
+  {group.items.map(item => {
+    const sel = isSelected(item.id);
+    return (
+      <View key={item.id} style={[styles.availCard, sel && styles.availCardSelected]}>
+        <Image
+          source={{ uri: item.image_url || 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg' }}
+          style={styles.availCardImg}
+        />
+        <Text style={styles.availCardName} numberOfLines={2}>{item.name}</Text>
+        <TouchableOpacity
+          style={[styles.availAddBtn, sel && styles.availAddBtnSel]}
+          onPress={() => sel ? removeItem(item.id) : addItem(item)}
+        >
+          {sel ? <X size={13} color="#fff" /> : <Plus size={13} color="#1B4332" />}
         </TouchableOpacity>
-
-        <View style={{ height: 32 }} />
-      </ScrollView>
+      </View>
+    );
+  })}
+  {group.items.length === 0 && (
+      <View style={styles.emptyGroupWrap}>
+    <Text style={styles.emptyGroupText}>No dishes added yet. Go to Dishes tab to add.</Text>
+  </View>
+  )}
+</View>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          )}
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  backBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
-  dateBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F0FDF4', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#BBF7D0' },
-  dateBannerText: { fontSize: 13, color: '#374151' },
-  dateBannerDate: { fontWeight: '700', color: '#1B4332' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', gap: 8 },
+  backBtn: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: '#111827', flexShrink: 0 },
+  headerRight: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 6, overflow: 'hidden' },
+  metaChip: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#F3F4F6', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 5, maxWidth: 90 },
+  metaChipText: { fontSize: 11, color: '#6B7280', flexShrink: 1 },
+  reviewBtn: { backgroundColor: '#1B4332', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, flexShrink: 0 },
+  reviewBtnText: { fontSize: 12, fontWeight: '700', color: '#fff' },
+  dateBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F0FDF4', paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#BBF7D0' },
+  dateBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dateBannerEmoji: { fontSize: 14 },
+  dateBannerDate: { fontSize: 13, fontWeight: '700', color: '#1B4332' },
   dateBannerProgress: { fontSize: 13, fontWeight: '700', color: '#1B4332' },
-  guestCountCard: { margin: 16, backgroundColor: '#F9FAFB', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E5E7EB', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  guestCountLabel: { fontSize: 13, fontWeight: '600', color: '#374151', flex: 1 },
-  counterRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 10, overflow: 'hidden', height: 40 },
-  counterBtn: { width: 40, height: '100%', justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
-  counterInput: { width: 60, fontSize: 16, fontWeight: '700', color: '#111827' },
-  section: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  sectionSubtitle: { fontSize: 12, color: '#9CA3AF', marginBottom: 10 },
-  dragHint: { fontSize: 12, color: '#9CA3AF' },
-  tabsScroll: { marginBottom: 12 },
-  tab: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: '#E5E7EB' },
-  tabActive: { backgroundColor: '#1B4332', borderColor: '#1B4332' },
-  tabText: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
-  tabTextActive: { color: '#fff', fontWeight: '700' },
-  itemsRow: { flexDirection: 'row' },
-  itemChip: { alignItems: 'center', marginRight: 12, width: 72 },
-  itemChipSelected: { opacity: 0.5 },
-  itemImage: { width: 60, height: 60, borderRadius: 30, marginBottom: 4 },
-  itemName: { fontSize: 11, color: '#374151', textAlign: 'center', fontWeight: '500' },
-  selectedDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#1B4332', marginTop: 2 },
-  emptyTabText: { fontSize: 13, color: '#9CA3AF', padding: 12 },
-  subCatRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  subCatBtn: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F9FAFB' },
-  subCatBtnActive: { backgroundColor: '#1B4332', borderColor: '#1B4332' },
-  subCatText: { fontSize: 13, color: '#374151', fontWeight: '500' },
-  subCatTextActive: { color: '#fff' },
-  subPanel: { marginTop: 12, backgroundColor: '#F9FAFB', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' },
-  subPanelTitle: { fontSize: 12, fontWeight: '700', color: '#6B7280', marginBottom: 10 },
-  group: { marginBottom: 12 },
-  groupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  groupDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#16A34A' },
-  groupTitle: { flex: 1, fontSize: 13, fontWeight: '700', color: '#111827' },
-  selectedItemChip: { alignItems: 'center', marginRight: 12, width: 72 },
-  clearBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, marginHorizontal: 16, borderRadius: 10 },
+  panelTabs: { flexDirection: 'row', backgroundColor: '#F9FAFB', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  panelTab: { flex: 1, paddingVertical: 10, alignItems: 'center' },
+  panelTabActive: { borderBottomWidth: 2, borderBottomColor: '#1B4332', backgroundColor: '#fff' },
+  panelTabText: { fontSize: 13, color: '#9CA3AF', fontWeight: '500' },
+  panelTabTextActive: { color: '#1B4332', fontWeight: '700' },
+  panelContainer: { flex: 1 },
+  panelHeader: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
+  panelHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
+  panelTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  panelSub: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
+  mealItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6', gap: 12 },
+  mealItemActive: { backgroundColor: '#F0FDF4' },
+  mealIconBox: { width: 44, height: 44, backgroundColor: '#F3F4F6', borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  mealIconBoxActive: { backgroundColor: '#D1FAE5' },
+  mealIcon: { fontSize: 22 },
+  mealItemInfo: { flex: 1 },
+  mealItemLabel: { fontSize: 15, fontWeight: '600', color: '#374151' },
+  mealItemLabelActive: { color: '#1B4332' },
+  mealItemSub: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
+  mealBadge: { backgroundColor: '#D1FAE5', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, marginRight: 4 },
+  mealBadgeText: { fontSize: 12, fontWeight: '700', color: '#065F46' },
+  tipBox: { flexDirection: 'row', gap: 10, margin: 16, backgroundColor: '#F0FDF4', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#BBF7D0' },
+  tipEmoji: { fontSize: 18 },
+  tipTitle: { fontSize: 13, fontWeight: '700', color: '#1B4332' },
+  tipText: { fontSize: 12, color: '#374151', marginTop: 2, lineHeight: 18 },
+  totalBar: { borderTopWidth: 1, borderTopColor: '#E5E7EB', padding: 16, backgroundColor: '#F9FAFB' },
+  totalBarLabel: { fontSize: 12, color: '#6B7280' },
+  totalBarValue: { fontSize: 22, fontWeight: '800', color: '#1B4332', marginTop: 2 },
+  clearBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   clearBtnText: { fontSize: 13, color: '#DC2626', fontWeight: '600' },
-  nextBtn: { backgroundColor: '#1B4332', borderRadius: 12, height: 52, justifyContent: 'center', alignItems: 'center', marginHorizontal: 16, marginTop: 8 },
-  nextBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  selectedGroup: { borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  selectedGroupHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
+  selectedGroupIcon: { fontSize: 18 },
+  selectedGroupLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: '#111827' },
+  selectedGroupBadge: { backgroundColor: '#F0FDF4', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+  selectedGroupBadgeText: { fontSize: 12, fontWeight: '600', color: '#1B4332' },
+  selectedItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#F9FAFB', gap: 10 },
+  selectedItemImg: { width: 38, height: 38, borderRadius: 8 },
+  selectedItemInfo: { flex: 1 },
+  selectedItemName: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  selectedItemSub: { fontSize: 11, color: '#9CA3AF', marginTop: 1 },
+  removeBtn: { width: 28, height: 28, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 14 },
+  emptyCenter: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
+  emptyCenterEmoji: { fontSize: 48, marginBottom: 12 },
+  emptyGroupText: { fontSize: 12, color: '#D1D5DB', fontStyle: 'italic', paddingVertical: 8, paddingHorizontal: 4 },
+  emptyCenterTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 4 },
+  emptyCenterSub: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginBottom: 20 },
+  emptyGroupWrap: { paddingVertical: 8, paddingHorizontal: 4 },
+  browseBtn: { backgroundColor: '#1B4332', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 },
+  browseBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  summaryBar: { borderTopWidth: 1, borderTopColor: '#E5E7EB', backgroundColor: '#F9FAFB', paddingVertical: 10 },
+  summaryScroll: { paddingHorizontal: 12, gap: 4 },
+  summaryItem: { alignItems: 'center', paddingHorizontal: 14 },
+  summaryItemIcon: { fontSize: 16, marginBottom: 2 },
+  summaryItemLabel: { fontSize: 11, fontWeight: '600', color: '#374151' },
+  summaryItemCount: { fontSize: 11, color: '#6B7280' },
+  searchBox: { flexDirection: 'row', alignItems: 'center', margin: 12, backgroundColor: '#F9FAFB', borderRadius: 10, borderWidth: 1, borderColor: '#E5E7EB', paddingHorizontal: 12, height: 42, gap: 8 },
+  searchInput: { flex: 1, fontSize: 14, color: '#111827' },
+  filterRow: { paddingHorizontal: 12, paddingBottom: 10, gap: 6 },
+  filterPill: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#F9FAFB' },
+  filterPillActive: { backgroundColor: '#1B4332', borderColor: '#1B4332' },
+  filterPillText: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
+  filterPillTextActive: { color: '#fff', fontWeight: '700' },
+  activeMealBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#F0FDF4', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#BBF7D0', marginBottom: 4 },
+  activeMealText: { fontSize: 12, color: '#374151' },
+  activeMealBold: { fontWeight: '700', color: '#1B4332' },
+  changeMealText: { fontSize: 12, fontWeight: '700', color: '#1B4332' },
+  availScroll: { paddingHorizontal: 12, paddingBottom: 24 },
+  noResultsText: { textAlign: 'center', color: '#9CA3AF', fontSize: 14, marginTop: 40 },
+  availGroup: { marginBottom: 16 },
+  availGroupTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10, marginTop: 4 },
+  availGroupIcon: { fontSize: 14 },
+  availGroupTitle: { fontSize: 13, fontWeight: '700', color: '#1B4332' },
+  availGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 4 },
+  availCard: { width: 100, alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 12, padding: 8, borderWidth: 1, borderColor: '#E5E7EB', margin: 4 },  availCardSelected: { borderColor: '#1B4332', backgroundColor: '#F0FDF4' },
+  availCardImg: { width: 54, height: 54, borderRadius: 27, marginBottom: 6 },
+  availCardName: { fontSize: 11, fontWeight: '500', color: '#374151', textAlign: 'center', marginBottom: 6, minHeight: 28 },
+  availAddBtn: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#1B4332', justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+  availAddBtnSel: { backgroundColor: '#1B4332', borderColor: '#1B4332' },
 });
