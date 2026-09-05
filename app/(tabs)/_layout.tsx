@@ -1,9 +1,12 @@
 import { Tabs, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, Calendar, Users, MoreHorizontal, UtensilsCrossed } from 'lucide-react-native';
+import Colors from '@/constants/Colors';
+
 function EventsIcon({ color, size }: { color: string; size: number }) {
   return (
     <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
@@ -25,6 +28,7 @@ export default function TabLayout() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -37,55 +41,66 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: '#1B5E20',
           borderTopWidth: 1,
-          borderTopColor: '#F3F4F6',
+          borderTopColor: '#143326',
           height: 56 + insets.bottom,
           paddingBottom: insets.bottom,
         },
-        tabBarActiveTintColor: '#1B4332',
-        tabBarInactiveTintColor: '#9CA3AF',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '500', marginTop: -2 },
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
+        tabBarItemStyle: {
+          paddingHorizontal: 0,
+          marginHorizontal: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 6.8,
+          fontWeight: '600',
+          marginTop: -2,
+          paddingHorizontal: 0,
+          marginHorizontal: 0,
+          letterSpacing: -0.3,
+        },
       }}>
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Dashboard',
+          title: t('Dashboard'),
           tabBarIcon: ({ color, size }) => <LayoutDashboard size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="events"
         options={{
-          title: 'Events',
+          title: t('Events'),
           tabBarIcon: ({ color, size }) => <EventsIcon color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'Calendar',
+          title: t('Calendar'),
           tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="customers"
         options={{
-          title: 'Customers',
+          title: t('Customers'),
           tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-  name="dishes"
-  options={{
-    title: 'Dishes',
-    tabBarIcon: ({ color, size }) => <UtensilsCrossed size={size} color={color} />,
-  }}
-/>
+        name="dishes"
+        options={{
+          title: t('Dishes'),
+          tabBarIcon: ({ color, size }) => <UtensilsCrossed size={size} color={color} />,
+        }}
+      />
       <Tabs.Screen
         name="more"
         options={{
-          title: 'More',
+          title: t('More'),
           tabBarIcon: ({ color, size }) => <MoreHorizontal size={size} color={color} />,
         }}
       />

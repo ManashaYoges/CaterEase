@@ -4,13 +4,18 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Bell, Menu, ChevronLeft, ChevronRight, Clock, MapPin, Users } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Event } from '@/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
+import { useNewEvent } from '@/context/NewEventContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { F, scaleFont } from '@/utils/fonts';
+import { T } from '@/utils/typography';
 
-const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -32,6 +37,13 @@ interface EventDateRow {
 
 export default function CalendarScreen() {
   const router = useRouter();
+  const { reset } = useNewEvent();
+  const { t, language } = useLanguage();
+
+  const handleNewEvent = () => {
+    reset();
+    router.push('/new-event/customer-details');
+  };
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const today = new Date();
@@ -110,13 +122,17 @@ export default function CalendarScreen() {
   const firstDay = getFirstDay(currentMonth, currentYear);
   const selectedRows = rowsOnDate(selectedDate);
 
+  const daysHeaders = language === 'ta'
+    ? ['ஞா', 'தி', 'செ', 'பு', 'வி', 'வெ', 'ச']
+    : ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity><Menu size={22} color="#374151" /></TouchableOpacity>
-        <Text style={styles.headerTitle}>CaterEase</Text>
-        <TouchableOpacity><Bell size={22} color="#374151" /></TouchableOpacity>
-      </View>
+      <LinearGradient colors={['#1B5E20', '#2E7D32']} style={styles.header}>
+        <TouchableOpacity><Menu size={20} color="#FFFFFF" /></TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: '#FFFFFF' }]}>{t('CaterEase')}</Text>
+        <TouchableOpacity><Bell size={20} color="#FFFFFF" /></TouchableOpacity>
+      </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.calendarCard}>
@@ -124,14 +140,14 @@ export default function CalendarScreen() {
             <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
               <ChevronLeft size={18} color="#374151" />
             </TouchableOpacity>
-            <Text style={styles.monthTitle}>{MONTHS[currentMonth]} {currentYear}</Text>
+            <Text style={styles.monthTitle}>{t(MONTHS[currentMonth])} {currentYear}</Text>
             <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
               <ChevronRight size={18} color="#374151" />
             </TouchableOpacity>
           </View>
 
           <View style={styles.daysRow}>
-            {DAYS.map(d => <Text key={d} style={styles.dayLabel}>{d}</Text>)}
+            {daysHeaders.map(d => <Text key={d} style={styles.dayLabel}>{d}</Text>)}
           </View>
 
           <View style={styles.datesGrid}>
@@ -165,11 +181,11 @@ export default function CalendarScreen() {
         <View style={styles.selectedSection}>
           <View style={styles.selectedHeader}>
             <Text style={styles.selectedDate}>
-              {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              {new Date(selectedDate + 'T00:00:00').toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </Text>
             {selectedRows.length > 0 && (
               <View style={styles.countBadge}>
-                <Text style={styles.countText}>{selectedRows.length} Event{selectedRows.length > 1 ? 's' : ''}</Text>
+                <Text style={styles.countText}>{selectedRows.length} {t('Events Count')}</Text>
               </View>
             )}
           </View>
@@ -177,7 +193,7 @@ export default function CalendarScreen() {
           {loading ? (
             <ActivityIndicator color="#1B4332" style={{ marginTop: 20 }} />
           ) : selectedRows.length === 0 ? (
-            <Text style={styles.noEventsText}>No events on this date.</Text>
+            <Text style={styles.noEventsText}>{t('No events on this date.')}</Text>
           ) : (
             selectedRows.map((row, idx) => {
               const sc = STATUS_COLORS[row.status] || STATUS_COLORS.draft;
@@ -191,15 +207,15 @@ export default function CalendarScreen() {
                     <Text style={styles.eventName}>{row.eventName}</Text>
                     <View style={[styles.badge, { backgroundColor: sc.bg }]}>
                       <Text style={[styles.badgeText, { color: sc.text }]}>
-                        {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+                        {t(row.status)}
                       </Text>
                     </View>
                   </View>
                   {row.mealTypes.length > 0 && (
-                    <Text style={styles.mealTypes}>{row.mealTypes.join(' · ')}</Text>
+                    <Text style={styles.mealTypes}>{row.mealTypes.map(m => t(m)).join(' · ')}</Text>
                   )}
-                  <View style={styles.metaRow}><MapPin size={13} color="#6B7280" /><Text style={styles.metaText}>{row.venue}</Text></View>
-                  <View style={styles.metaRow}><Users size={13} color="#6B7280" /><Text style={styles.metaText}>{row.guestCount} Guests</Text></View>
+                  <View style={styles.metaRow}><MapPin size={12} color="#6B7280" /><Text style={styles.metaText}>{row.venue}</Text></View>
+                  <View style={styles.metaRow}><Users size={12} color="#6B7280" /><Text style={styles.metaText}>{row.guestCount} {t('Guests')}</Text></View>
                 </TouchableOpacity>
               );
             })
@@ -210,30 +226,30 @@ export default function CalendarScreen() {
         {rows.filter(r => r.date > selectedDate).slice(0, 2).map((row, idx) => {
           const d = new Date(row.date + 'T00:00:00');
           const labelColor = row.status === 'enquiry' ? '#92400E' : '#1B4332';
-          const label = row.status === 'enquiry' ? 'PENDING ENQUIRY' : 'NEXT UPCOMING';
+          const labelKey = row.status === 'enquiry' ? 'PENDING ENQUIRY' : 'NEXT UPCOMING';
           return (
             <TouchableOpacity
               key={`upcoming-${row.eventId}-${idx}`}
               style={styles.upcomingCard}
               onPress={() => router.push({ pathname: '/event-detail', params: { id: row.eventId } })}
             >
-              <Text style={[styles.upcomingLabel, { color: labelColor }]}>{label}</Text>
+              <Text style={[styles.upcomingLabel, { color: labelColor }]}>{t(labelKey)}</Text>
               <View style={styles.upcomingRow}>
                 <View style={styles.upcomingInfo}>
                   <Text style={styles.upcomingName}>{row.eventName}</Text>
                   <Text style={styles.upcomingMeta}>
-                    {d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    {row.mealTypes.length > 0 ? ` · ${row.mealTypes.join(', ')}` : ''}
-                    {' · '}{row.guestCount} Guests
+                    {d.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {row.mealTypes.length > 0 ? ` · ${row.mealTypes.map(m => t(m)).join(', ')}` : ''}
+                    {' · '}{row.guestCount} {t('Guests')}
                   </Text>
                 </View>
-                <ChevronRight size={18} color="#9CA3AF" />
+                <ChevronRight size={16} color="#9CA3AF" />
               </View>
             </TouchableOpacity>
           );
         })}
 
-        <TouchableOpacity style={styles.fab} onPress={() => router.push('/new-event/customer-details')}>
+        <TouchableOpacity style={styles.fab} onPress={handleNewEvent}>
           <Text style={styles.fabIcon}>+</Text>
         </TouchableOpacity>
         <View style={{ height: 100 }} />
@@ -244,45 +260,45 @@ export default function CalendarScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1B4332' },
-  calendarCard: { backgroundColor: '#fff', margin: 16, borderRadius: 16, padding: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
-  calHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  navBtn: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
-  monthTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
-  daysRow: { flexDirection: 'row', marginBottom: 8 },
-  dayLabel: { flex: 1, textAlign: 'center', fontSize: 11, fontWeight: '600', color: '#9CA3AF' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.15)' },
+  headerTitle: { ...T.h2, color: '#1B4332' },
+  calendarCard: { backgroundColor: '#fff', margin: 14, borderRadius: 14, padding: 14, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  calHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  navBtn: { width: 30, height: 30, justifyContent: 'center', alignItems: 'center' },
+  monthTitle: { ...T.sectionHeader },
+  daysRow: { flexDirection: 'row', marginBottom: 6 },
+  dayLabel: { flex: 1, textAlign: 'center', ...T.labelSm, color: '#9CA3AF' },
   datesGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  dateCell: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 4 },
-  dateBubble: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  dateCell: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 3 },
+  dateBubble: { width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
   selectedBubble: { backgroundColor: '#1B4332' },
   todayBubble: { borderWidth: 1.5, borderColor: '#1B4332' },
-  dateNum: { fontSize: 13, fontWeight: '500', color: '#374151' },
-  selectedNum: { color: '#fff', fontWeight: '700' },
-  todayNum: { color: '#1B4332', fontWeight: '700' },
+  dateNum: { fontSize: scaleFont(10.5), fontFamily: F.regular, color: '#374151' },
+  selectedNum: { color: '#fff', fontFamily: F.semibold },
+  todayNum: { color: '#1B4332', fontFamily: F.semibold },
   dotsRow: { flexDirection: 'row', gap: 2, marginTop: 2 },
   dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#1B4332' },
   dotSelected: { backgroundColor: '#A7F3D0' },
-  selectedSection: { paddingHorizontal: 16, marginBottom: 8 },
-  selectedHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  selectedDate: { fontSize: 16, fontWeight: '700', color: '#111827' },
-  countBadge: { backgroundColor: '#F0FDF4', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
-  countText: { fontSize: 12, fontWeight: '600', color: '#1B4332' },
-  noEventsText: { fontSize: 14, color: '#9CA3AF', marginTop: 8, marginBottom: 16 },
-  eventCard: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
-  eventTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
-  eventName: { fontSize: 15, fontWeight: '700', color: '#111827', flex: 1, marginRight: 8 },
-  mealTypes: { fontSize: 11, color: '#1B4332', fontWeight: '600', marginBottom: 4 },
-  badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  metaText: { fontSize: 12, color: '#6B7280' },
-  upcomingCard: { backgroundColor: '#fff', marginHorizontal: 16, marginBottom: 10, borderRadius: 14, padding: 14, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
-  upcomingLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1, marginBottom: 6 },
+  selectedSection: { paddingHorizontal: 14, marginBottom: 8 },
+  selectedHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  selectedDate: { ...T.sectionHeader },
+  countBadge: { backgroundColor: '#F0FDF4', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  countText: { fontSize: scaleFont(9.5), fontFamily: F.medium, color: '#1B4332' },
+  noEventsText: { ...T.bodySm, color: '#9CA3AF', marginTop: 6, marginBottom: 14 },
+  eventCard: { backgroundColor: '#fff', borderRadius: 12, padding: 12, marginBottom: 8, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 5, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  eventTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  eventName: { ...T.eventName, flex: 1, marginRight: 6 },
+  mealTypes: { fontSize: scaleFont(9.5), color: '#1B4332', fontFamily: F.medium, marginBottom: 2 },
+  badge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  badgeText: { fontSize: scaleFont(8.5), fontFamily: F.medium },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  metaText: { ...T.cardContent, fontSize: scaleFont(9.5) },
+  upcomingCard: { backgroundColor: '#fff', marginHorizontal: 14, marginBottom: 8, borderRadius: 12, padding: 12, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  upcomingLabel: { fontSize: scaleFont(8.5), fontFamily: F.semibold, letterSpacing: 0.5, marginBottom: 4 },
   upcomingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   upcomingInfo: { flex: 1 },
-  upcomingName: { fontSize: 14, fontWeight: '700', color: '#111827' },
-  upcomingMeta: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  fab: { position: 'absolute', right: 20, bottom: 20, width: 52, height: 52, backgroundColor: '#1B4332', borderRadius: 26, justifyContent: 'center', alignItems: 'center', shadowColor: '#1B4332', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
-  fabIcon: { fontSize: 28, color: '#fff', fontWeight: '300', lineHeight: 30 },
+  upcomingName: { ...T.eventName },
+  upcomingMeta: { ...T.cardContent, fontSize: scaleFont(9.5), marginTop: 1 },
+  fab: { position: 'absolute', right: 16, bottom: 16, width: 48, height: 48, backgroundColor: '#1B4332', borderRadius: 24, justifyContent: 'center', alignItems: 'center', shadowColor: '#1B4332', shadowOpacity: 0.3, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 6 },
+  fabIcon: { fontSize: scaleFont(20), color: '#fff', fontFamily: F.regular, lineHeight: 22 },
 });

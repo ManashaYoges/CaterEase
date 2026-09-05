@@ -4,11 +4,17 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Bell, MapPin, Users, ChevronRight, Plus, Calendar } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Event } from '@/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
+import { useNewEvent } from '@/context/NewEventContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { F, scaleFont } from '@/utils/fonts';
+import { T } from '@/utils/typography';
+import Colors from '@/constants/Colors';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   confirmed: { bg: '#D1FAE5', text: '#065F46' },
@@ -30,6 +36,13 @@ interface EventDateRow {
 
 export default function EventsScreen() {
   const router = useRouter();
+  const { reset } = useNewEvent();
+  const { t } = useLanguage();
+
+  const handleNewEvent = () => {
+    reset();
+    router.push('/new-event/customer-details');
+  };
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [rows, setRows] = useState<EventDateRow[]>([]);
@@ -85,17 +98,19 @@ export default function EventsScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>CaterEase</Text>
-        <TouchableOpacity><Bell size={22} color="#374151" /></TouchableOpacity>
-      </View>
+      <LinearGradient colors={['#1B5E20', '#2E7D32']} style={styles.topHeaderGradient}>
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: Colors.white }]}>{t('CaterEase')}</Text>
+          <TouchableOpacity><Bell size={20} color="#FFFFFF" /></TouchableOpacity>
+        </View>
 
-      <View style={styles.titleRow}>
-        <Text style={styles.pageTitle}>Events</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/new-event/customer-details')}>
-          <Plus size={18} color="#fff" />
-        </TouchableOpacity>
-      </View>
+        <View style={styles.titleRow}>
+          <Text style={[styles.pageTitle, { color: Colors.white }]}>{t('Events')}</Text>
+          <TouchableOpacity style={[styles.addBtn, { backgroundColor: Colors.white }]} onPress={handleNewEvent}>
+            <Plus size={18} color="#1B5E20" />
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
 
       {loading ? (
         <View style={styles.center}><ActivityIndicator size="large" color="#1B4332" /></View>
@@ -103,10 +118,10 @@ export default function EventsScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {rows.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No events yet</Text>
-              <Text style={styles.emptyText}>Create your first event to get started</Text>
-              <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/new-event/customer-details')}>
-                <Text style={styles.emptyBtnText}>+ New Event</Text>
+              <Text style={styles.emptyTitle}>{t('No events yet')}</Text>
+              <Text style={styles.emptyText}>{t('Create your first event to get started')}</Text>
+              <TouchableOpacity style={styles.emptyBtn} onPress={handleNewEvent}>
+                <Text style={styles.emptyBtnText}>{t('+ New Event')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -130,26 +145,26 @@ export default function EventsScreen() {
                       <Text style={styles.eventName} numberOfLines={1}>{row.eventName}</Text>
                       <View style={[styles.badge, { backgroundColor: sc.bg }]}>
                         <Text style={[styles.badgeText, { color: sc.text }]}>
-                          {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+                          {t(row.status)}
                         </Text>
                       </View>
                     </View>
                     {row.mealTypes.length > 0 && (
                       <View style={styles.mealRow}>
                         <Calendar size={11} color="#1B4332" />
-                        <Text style={styles.mealText}>{row.mealTypes.join(' · ')}</Text>
+                        <Text style={styles.mealText}>{row.mealTypes.map(m => t(m)).join(' · ')}</Text>
                       </View>
                     )}
                     <View style={styles.metaRow}>
-                      <Users size={13} color="#6B7280" />
-                      <Text style={styles.metaText}>{row.guestCount} Guests</Text>
+                      <Users size={12} color="#6B7280" />
+                      <Text style={styles.metaText}>{row.guestCount} {t('Guests')}</Text>
                     </View>
                     <View style={styles.metaRow}>
-                      <MapPin size={13} color="#6B7280" />
+                      <MapPin size={12} color="#6B7280" />
                       <Text style={styles.metaText}>{row.venue}</Text>
                     </View>
                   </View>
-                  <ChevronRight size={18} color="#9CA3AF" />
+                  <ChevronRight size={16} color="#9CA3AF" />
                 </TouchableOpacity>
               );
             })
@@ -162,29 +177,30 @@ export default function EventsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: Colors.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 80 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1B4332' },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
-  pageTitle: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  addBtn: { width: 38, height: 38, backgroundColor: '#1B4332', borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  emptyCard: { margin: 20, padding: 32, backgroundColor: '#fff', borderRadius: 16, alignItems: 'center' },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#111827', marginBottom: 8 },
-  emptyText: { fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 20 },
-  emptyBtn: { backgroundColor: '#1B4332', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
-  emptyBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  eventCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 16, marginBottom: 10, borderRadius: 14, padding: 14, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
-  dateBadge: { width: 48, height: 56, backgroundColor: '#1B4332', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 14, paddingVertical: 4 },
-dateMonth: { fontSize: 11, fontWeight: '600', color: '#A7F3D0', letterSpacing: 0.5, lineHeight: 14, includeFontPadding: false, textAlignVertical: 'center' },
-dateDay: { fontSize: 22, fontWeight: '800', color: '#fff', lineHeight: 24, includeFontPadding: false, textAlignVertical: 'center' },
+  topHeaderGradient: { paddingBottom: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.15)' },
+  headerTitle: { ...T.h2, color: Colors.white },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  pageTitle: { ...T.pageTitle, color: Colors.white },
+  addBtn: { width: 36, height: 36, backgroundColor: Colors.white, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  emptyCard: { margin: 16, padding: 24, backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.borderGreenLight, borderRadius: 14, alignItems: 'center' },
+  emptyTitle: { ...T.sectionHeader, marginBottom: 6, color: Colors.primary },
+  emptyText: { ...T.bodySm, color: Colors.textSecondary, textAlign: 'center', marginBottom: 16 },
+  emptyBtn: { backgroundColor: Colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
+  emptyBtnText: { ...T.btnSm, color: Colors.white },
+  eventCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.borderGreenLight, marginHorizontal: 14, marginBottom: 8, borderRadius: 12, padding: 12, shadowColor: Colors.primary, shadowOpacity: 0.04, shadowRadius: 5, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  dateBadge: { width: 44, height: 50, backgroundColor: Colors.primary, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 12, paddingVertical: 2 },
+  dateMonth: { fontSize: scaleFont(8.5), fontFamily: F.medium, color: '#A7F3D0', letterSpacing: 0.5, includeFontPadding: false },
+  dateDay: { fontSize: scaleFont(14.5), fontFamily: F.bold, color: Colors.white, includeFontPadding: false },
   eventInfo: { flex: 1 },
-  titleRow2: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  eventName: { fontSize: 15, fontWeight: '700', color: '#111827', flex: 1, marginRight: 8 },
-  badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
+  titleRow2: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 },
+  eventName: { ...T.eventName, flex: 1, marginRight: 6, color: Colors.textPrimary },
+  badge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  badgeText: { fontSize: scaleFont(8.5), fontFamily: F.medium },
   mealRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
-  mealText: { fontSize: 11, color: '#1B4332', fontWeight: '600' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  metaText: { fontSize: 12, color: '#6B7280' },
+  mealText: { fontSize: scaleFont(9.5), color: Colors.primaryAccent, fontFamily: F.medium },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 },
+  metaText: { ...T.cardContent, fontSize: scaleFont(9.5), color: Colors.textSecondary },
 });

@@ -1,15 +1,20 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  ActivityIndicator, RefreshControl,
+  ActivityIndicator, RefreshControl, Alert,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Plus, Leaf, Drumstick } from 'lucide-react-native';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { Plus, Leaf, Drumstick, Edit3, Trash2 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
-import { MenuItem } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
+import { MenuItem, MenuCategory } from '@/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { F, scaleFont } from '@/utils/fonts';
+import { T } from '@/utils/typography';
+import { fetchUserCategories, matchesCategory } from '@/utils/categories';
 
 const MEAL_TYPES = [
   { key: 'breakfast', label: 'Breakfast' },
@@ -18,21 +23,18 @@ const MEAL_TYPES = [
   { key: 'snacks',    label: 'Snacks' },
 ];
 
-const MEAL_CATEGORIES = [
-  { key: 'main',     label: 'Main Dishes' },
-  { key: 'dessert',  label: 'Desserts & Sweets' },
-  { key: 'beverage', label: 'Hot/Soft Beverages' },
-];
-
 export default function DishesScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
 
   const [menuType, setMenuType] = useState<'veg' | 'non_veg'>('veg');
   const [items, setItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
   const [expandedMeals, setExpandedMeals] = useState<Record<string, boolean>>({
     breakfast: true,
     lunch: true,
@@ -40,63 +42,112 @@ export default function DishesScreen() {
     snacks: true,
   });
 
-  const load = async () => {
+  const loadData = async () => {
     if (!user) return;
-    const snapshot = await getDocs(
-      query(collection(db, 'menu_items'),
-        where('user_id', '==', user.uid),
-        where('is_active', '==', true)
-      )
-    );
-    setItems(snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as MenuItem[]);
-    setLoading(false);
-    setRefreshing(false);
+    try {
+      const [cats, dishSnap] = await Promise.all([
+        fetchUserCategories(user.uid),
+        getDocs(
+          query(collection(db, 'menu_items'),
+            where('user_id', '==', user.uid),
+            where('is_active', '==', true)
+          )
+        ),
+      ]);
+      setCategories(cats);
+      setItems(dishSnap.docs.map(d => ({ id: d.id, ...d.data() })) as MenuItem[]);
+    } catch (err) {
+      console.error('Error loading dishes data:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  useFocusEffect(useCallback(() => { load(); }, [user]));
+  useFocusEffect(useCallback(() => { loadData(); }, [user]));
 
   const toggleMeal = (key: string) =>
     setExpandedMeals(prev => ({ ...prev, [key]: !prev[key] }));
 
-  const filtered = items.filter(i => i.menu_type === menuType);
+  // Target category type string
+  const currentCategoryType: 'veg' | 'nonVeg' = menuType === 'veg' ? 'veg' : 'nonVeg';
+  
+  // Filtered categories for active tab
+  const activeCategories = categories.filter(c => c.categoryType === currentCategoryType);
 
-  // Default old dishes (no meal_category) to 'main'
-  const getItems = (mealType: string, category: string) =>
-    filtered.filter(i => {
-      const itemCat = i.meal_category || 'main';
-      return i.meal_type === mealType && itemCat === category;
+  // Filtered dishes for active tab
+  const filteredDishes = items.filter(i => {
+    const isVegMatch = menuType === 'veg'
+      ? (i.menu_type === 'veg' || i.categoryType === 'veg')
+      : (i.menu_type === 'non_veg' || i.categoryType === 'nonVeg');
+    return isVegMatch;
+  });
+
+  const getDishesByMealAndCategory = (mealType: string, catName: string) =>
+    filteredDishes.filter(i => {
+      return i.meal_type === mealType && matchesCategory(i.meal_category, catName);
     });
 
   const getMealCount = (mealType: string) =>
-    filtered.filter(i => i.meal_type === mealType).length;
+    filteredDishes.filter(i => i.meal_type === mealType).length;
+
+  const handleDeleteDish = (id: string, name: string) => {
+    Alert.alert(
+      t('Delete Dish'),
+      t('Are you sure you want to delete "{name}"?', { name }),
+      [
+        { text: t('Cancel'), style: 'cancel' },
+        {
+          text: t('Delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'menu_items', id));
+              setItems(prev => prev.filter(item => item.id !== id));
+            } catch (err: any) {
+              Alert.alert(t('Error'), err.message || 'Failed to delete dish');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Dishes</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/add-dish')}>
-          <Plus size={18} color="#fff" />
-          <Text style={styles.addBtnText}>Add Dish</Text>
-        </TouchableOpacity>
-      </View>
+      <LinearGradient colors={['#1B5E20', '#2E7D32']} style={styles.topHeaderGradient}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: '#FFFFFF' }]}>{t('Dishes Catalog')}</Text>
+          <View style={styles.headerBtns}>
+            <TouchableOpacity
+              style={[styles.addBtn, { backgroundColor: '#FFFFFF' }]}
+              onPress={() => router.push(`/add-dish?menuType=${menuType}`)}
+            >
+              <Plus size={16} color="#1B5E20" />
+              <Text style={[styles.addBtnText, { color: '#1B5E20' }]}>{t('Add Dish')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      {/* Veg / Non-Veg toggle */}
-      <View style={styles.toggleRow}>
-        <TouchableOpacity
-          style={[styles.toggleBtn, menuType === 'veg' && styles.toggleBtnActiveVeg]}
-          onPress={() => setMenuType('veg')}
-        >
-          <Leaf size={14} color={menuType === 'veg' ? '#fff' : '#16A34A'} />
-          <Text style={[styles.toggleText, menuType === 'veg' && styles.toggleTextActive]}>Pure Veg</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.toggleBtn, menuType === 'non_veg' && styles.toggleBtnActiveNonVeg]}
-          onPress={() => setMenuType('non_veg')}
-        >
-          <Drumstick size={14} color={menuType === 'non_veg' ? '#fff' : '#DC2626'} />
-          <Text style={[styles.toggleText, menuType === 'non_veg' && styles.toggleTextActive]}>Non-Veg</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Veg / Non-Veg toggle */}
+        <View style={styles.toggleRow}>
+          <TouchableOpacity
+            style={[styles.toggleBtn, menuType === 'veg' && styles.toggleBtnActiveVeg]}
+            onPress={() => setMenuType('veg')}
+          >
+            <Leaf size={14} color={menuType === 'veg' ? '#16A34A' : '#FFFFFF'} />
+            <Text style={[styles.toggleText, menuType === 'veg' && styles.toggleTextActiveVeg]}>{t('Pure Veg')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleBtn, menuType === 'non_veg' && styles.toggleBtnActiveNonVeg]}
+            onPress={() => setMenuType('non_veg')}
+          >
+            <Drumstick size={14} color={menuType === 'non_veg' ? '#DC2626' : '#FFFFFF'} />
+            <Text style={[styles.toggleText, menuType === 'non_veg' && styles.toggleTextActiveNonVeg]}>{t('Non-Veg')}</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
 
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color="#1B4332" />
@@ -105,7 +156,7 @@ export default function DishesScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />
+            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} />
           }
         >
           {MEAL_TYPES.map(meal => {
@@ -119,10 +170,10 @@ export default function DishesScreen() {
                   onPress={() => toggleMeal(meal.key)}
                 >
                   <View style={styles.mealHeaderLeft}>
-                    <View style={styles.mealDot} />
-                    <Text style={styles.mealLabel}>{meal.label}</Text>
-                    <View style={styles.countBadge}>
-                      <Text style={styles.countText}>{totalCount}</Text>
+                    <View style={[styles.mealDot, menuType === 'non_veg' && { backgroundColor: '#DC2626' }]} />
+                    <Text style={styles.mealLabel}>{t(meal.label)}</Text>
+                    <View style={[styles.countBadge, menuType === 'non_veg' && { backgroundColor: '#FEE2E2' }]}>
+                      <Text style={[styles.countText, menuType === 'non_veg' && { color: '#991B1B' }]}>{totalCount}</Text>
                     </View>
                   </View>
                   <Text style={styles.chevron}>{isExpanded ? '▲' : '▼'}</Text>
@@ -130,25 +181,25 @@ export default function DishesScreen() {
 
                 {isExpanded && (
                   <View style={styles.mealBody}>
-                    {MEAL_CATEGORIES.map(cat => {
-                      const catItems = getItems(meal.key, cat.key);
-                      // Hide empty dessert/beverage sections to reduce clutter
-                      if (catItems.length === 0 && cat.key !== 'main') return null;
+                    {activeCategories.map(cat => {
+                      const catItems = getDishesByMealAndCategory(meal.key, cat.name);
+                      
                       return (
-                        <View key={cat.key} style={styles.categoryBlock}>
+                        <View key={cat.id || cat.name} style={styles.categoryBlock}>
                           <View style={styles.categoryHeader}>
-                            <Text style={styles.categoryLabel}>{cat.label}</Text>
+                            <Text style={styles.categoryLabel}>{t(cat.name)}</Text>
                             <Text style={styles.categoryCount}>{catItems.length}</Text>
                           </View>
                           {catItems.length === 0 ? (
-                            <Text style={styles.emptyText}>No dishes yet</Text>
+                            <Text style={styles.emptyText}>
+                              {menuType === 'veg' ? t('No Veg dishes in this category') : t('No Non-Veg dishes in this category')}
+                            </Text>
                           ) : (
                             catItems.map(item => (
                               <View key={item.id} style={styles.dishRow}>
                                 <View style={[
                                   styles.dishIndicator,
-                                  cat.key === 'dessert'  && styles.dishIndicatorDessert,
-                                  cat.key === 'beverage' && styles.dishIndicatorBeverage,
+                                  menuType === 'non_veg' && { backgroundColor: '#DC2626' }
                                 ]} />
                                 <View style={styles.dishInfo}>
                                   <Text style={styles.dishName}>{item.name}</Text>
@@ -159,6 +210,20 @@ export default function DishesScreen() {
                                 {item.price > 0 && (
                                   <Text style={styles.dishPrice}>₹{item.price}</Text>
                                 )}
+                                <View style={styles.dishActions}>
+                                  <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    onPress={() => router.push(`/edit-dish?id=${item.id}` as any)}
+                                  >
+                                    <Edit3 size={14} color="#6B7280" />
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    style={styles.actionIconBtn}
+                                    onPress={() => handleDeleteDish(item.id, item.name)}
+                                  >
+                                    <Trash2 size={14} color="#EF4444" />
+                                  </TouchableOpacity>
+                                </View>
                               </View>
                             ))
                           )}
@@ -178,37 +243,40 @@ export default function DishesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  headerTitle: { fontSize: 22, fontWeight: '700', color: '#111827' },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#1B4332', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 },
-  addBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
-  toggleRow: { flexDirection: 'row', margin: 16, backgroundColor: '#F3F4F6', borderRadius: 12, padding: 4 },
-  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10 },
-  toggleBtnActiveVeg: { backgroundColor: '#16A34A' },
-  toggleBtnActiveNonVeg: { backgroundColor: '#DC2626' },
-  toggleText: { fontSize: 14, fontWeight: '600', color: '#6B7280' },
-  toggleTextActive: { color: '#fff' },
-  scroll: { paddingHorizontal: 16, paddingBottom: 40 },
-  mealBlock: { marginBottom: 12, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 14, overflow: 'hidden' },
-  mealHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: '#F9FAFB' },
+  topHeaderGradient: { paddingBottom: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.15)' },
+  headerTitle: { ...T.pageTitle, color: '#FFFFFF' },
+  headerBtns: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFFFFF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+  addBtnText: { ...T.btnSm, color: '#1B5E20' },
+  toggleRow: { flexDirection: 'row', marginHorizontal: 14, marginTop: 4, marginBottom: 8, backgroundColor: 'rgba(255, 255, 255, 0.18)', borderRadius: 10, padding: 3 },
+  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 8 },
+  toggleBtnActiveVeg: { backgroundColor: '#FFFFFF' },
+  toggleBtnActiveNonVeg: { backgroundColor: '#FFFFFF' },
+  toggleText: { fontSize: scaleFont(11.5), fontFamily: F.medium, color: '#FFFFFF' },
+  toggleTextActiveVeg: { color: '#16A34A', fontFamily: F.semibold },
+  toggleTextActiveNonVeg: { color: '#DC2626', fontFamily: F.semibold },
+  scroll: { paddingHorizontal: 14, paddingTop: 12, paddingBottom: 40 },
+  mealBlock: { marginBottom: 10, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, overflow: 'hidden' },
+  mealHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, backgroundColor: '#F9FAFB' },
   mealHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  mealDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#1B4332' },
-  mealLabel: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  countBadge: { backgroundColor: '#D1FAE5', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
-  countText: { fontSize: 12, fontWeight: '700', color: '#065F46' },
-  chevron: { fontSize: 10, color: '#9CA3AF' },
-  mealBody: { paddingHorizontal: 14, paddingBottom: 12 },
-  categoryBlock: { marginTop: 12 },
-  categoryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
-  categoryLabel: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
-  categoryCount: { fontSize: 12, color: '#9CA3AF' },
-  emptyText: { fontSize: 12, color: '#D1D5DB', fontStyle: 'italic', paddingLeft: 8, paddingVertical: 4 },
-  dishRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: '#fff', borderRadius: 8, marginBottom: 4, borderWidth: 1, borderColor: '#F3F4F6' },
-  dishIndicator: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#1B4332' },
-  dishIndicatorDessert: { backgroundColor: '#F59E0B' },
-  dishIndicatorBeverage: { backgroundColor: '#3B82F6' },
+  mealDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#16A34A' },
+  mealLabel: { ...T.cardTitle, fontSize: scaleFont(12.5) },
+  countBadge: { backgroundColor: '#D1FAE5', borderRadius: 16, paddingHorizontal: 6, paddingVertical: 2 },
+  countText: { fontSize: scaleFont(9.5), fontFamily: F.medium, color: '#065F46' },
+  chevron: { fontSize: scaleFont(8.5), color: '#9CA3AF' },
+  mealBody: { paddingHorizontal: 12, paddingBottom: 10 },
+  categoryBlock: { marginTop: 10 },
+  categoryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  categoryLabel: { ...T.labelSm, fontWeight: '700' },
+  categoryCount: { ...T.caption },
+  emptyText: { ...T.caption, fontStyle: 'italic', paddingLeft: 6, paddingVertical: 4 },
+  dishRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 7, paddingHorizontal: 10, backgroundColor: '#fff', borderRadius: 8, marginBottom: 4, borderWidth: 1, borderColor: '#F3F4F6' },
+  dishIndicator: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#16A34A' },
   dishInfo: { flex: 1 },
-  dishName: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  dishDesc: { fontSize: 12, color: '#6B7280', marginTop: 1 },
-  dishPrice: { fontSize: 13, fontWeight: '700', color: '#1B4332' },
+  dishName: { fontSize: scaleFont(11.5), fontFamily: F.regular, color: '#111827' },
+  dishDesc: { ...T.description, marginTop: 1 },
+  dishPrice: { ...T.price },
+  dishActions: { flexDirection: 'row', gap: 4 },
+  actionIconBtn: { width: 28, height: 28, justifyContent: 'center', alignItems: 'center', borderRadius: 6, backgroundColor: '#F9FAFB' },
 });

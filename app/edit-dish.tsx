@@ -3,8 +3,8 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Leaf, Drumstick } from 'lucide-react-native';
-import { addDoc, collection } from 'firebase/firestore';
+import { ArrowLeft, Leaf, Drumstick, Trash2 } from 'lucide-react-native';
+import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -13,7 +13,7 @@ import KeyboardAwareScrollView from '@/components/KeyboardAwareScrollView';
 import { F, scaleFont } from '@/utils/fonts';
 import { T } from '@/utils/typography';
 import { fetchUserCategories } from '@/utils/categories';
-import { MenuCategory } from '@/types';
+import { MenuItem, MenuCategory } from '@/types';
 
 const MEAL_TYPES = [
   { key: 'breakfast', label: 'Breakfast' },
@@ -22,9 +22,9 @@ const MEAL_TYPES = [
   { key: 'snacks',    label: 'Snacks' },
 ];
 
-export default function AddDishScreen() {
+export default function EditDishScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ menuType?: string; category?: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
@@ -33,35 +33,48 @@ export default function AddDishScreen() {
   const priceRef = useRef<TextInput>(null);
   const descriptionRef = useRef<TextInput>(null);
 
-  const initialMenuType = params.menuType === 'non_veg' ? 'non_veg' : 'veg';
-  const [menuType, setMenuType] = useState<'veg' | 'non_veg'>(initialMenuType);
+  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-
+  
   const [name, setName] = useState('');
+  const [menuType, setMenuType] = useState<'veg' | 'non_veg'>('veg');
   const [mealType, setMealType] = useState('lunch');
-  const [mealCategory, setMealCategory] = useState(params.category || '');
+  const [mealCategory, setMealCategory] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    async function loadCats() {
-      if (!user) return;
-      const cats = await fetchUserCategories(user.uid);
-      setCategories(cats);
-      setLoadingCategories(false);
+    async function loadDishAndCats() {
+      if (!user || !id) return;
+      try {
+        const cats = await fetchUserCategories(user.uid);
+        setCategories(cats);
 
-      const matching = cats.filter(c =>
-        initialMenuType === 'veg' ? c.categoryType === 'veg' : c.categoryType === 'nonVeg'
-      );
-      if (matching.length > 0 && !params.category) {
-        setMealCategory(matching[0].name);
+        const dishDoc = await getDoc(doc(db, 'menu_items', id));
+        if (dishDoc.exists()) {
+          const data = dishDoc.data() as MenuItem;
+          setName(data.name || '');
+          const mt = data.menu_type === 'non_veg' ? 'non_veg' : 'veg';
+          setMenuType(mt);
+          setMealType(data.meal_type || 'lunch');
+          setMealCategory(data.meal_category || 'Main Course');
+          setPrice(data.price ? data.price.toString() : '');
+          setDescription(data.description || '');
+        } else {
+          Alert.alert(t('Error'), 'Dish not found');
+          router.back();
+        }
+      } catch (err: any) {
+        Alert.alert(t('Error'), err.message || 'Failed to load dish details');
+      } finally {
+        setLoading(false);
       }
     }
-    loadCats();
-  }, [user]);
+    loadDishAndCats();
+  }, [user, id]);
 
   const targetCategoryType: 'veg' | 'nonVeg' = menuType === 'veg' ? 'veg' : 'nonVeg';
   const availableCategories = categories.filter(c => c.categoryType === targetCategoryType);
@@ -76,11 +89,10 @@ export default function AddDishScreen() {
   const handleSave = async () => {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
-    if (!user) return;
+    if (!user || !id) return;
     setSaving(true);
     try {
-      await addDoc(collection(db, 'menu_items'), {
-        user_id: user.uid,
+      await updateDoc(doc(db, 'menu_items', id), {
         name: name.trim(),
         menu_type: menuType,
         categoryType: targetCategoryType,
@@ -88,17 +100,49 @@ export default function AddDishScreen() {
         meal_category: mealCategory,
         price: parseFloat(price) || 0,
         description: description.trim() || null,
-        image_url: null,
-        is_active: true,
-        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
       router.back();
     } catch (err: any) {
-      setErrors({ general: err.message || 'Failed to save dish' });
+      setErrors({ general: err.message || 'Failed to update dish' });
     } finally {
       setSaving(false);
     }
   };
+
+  const handleDelete = () => {
+    Alert.alert(
+      t('Delete Dish'),
+      t('Are you sure you want to delete "{name}"?', { name }),
+      [
+        { text: t('Cancel'), style: 'cancel' },
+        {
+          text: t('Delete'),
+          style: 'destructive',
+          onPress: async () => {
+            if (!id) return;
+            setDeleting(true);
+            try {
+              await deleteDoc(doc(db, 'menu_items', id));
+              router.back();
+            } catch (err: any) {
+              Alert.alert(t('Error'), err.message || 'Failed to delete dish');
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator color="#1B4332" size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -106,33 +150,51 @@ export default function AddDishScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <ArrowLeft size={18} color="#374151" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('Add New Dish')}</Text>
-        <View style={{ width: 36 }} />
+        <Text style={styles.headerTitle}>{t('Edit Dish')}</Text>
+        <TouchableOpacity style={styles.deleteHeaderBtn} onPress={handleDelete} disabled={deleting}>
+          <Trash2 size={18} color="#DC2626" />
+        </TouchableOpacity>
       </View>
 
       <KeyboardAwareScrollView contentContainerStyle={styles.scroll}>
         {errors.general ? <Text style={styles.errorText}>{errors.general}</Text> : null}
 
-        {/* Inherited Classification Badge */}
-        <View style={[styles.inheritsBox, menuType === 'non_veg' && styles.inheritsBoxNonVeg]}>
-          {menuType === 'veg' ? (
-            <>
-              <Leaf size={16} color="#16A34A" />
-              <Text style={styles.inheritsTextVeg}>{t('Adding to 🥗 Veg Menu')}</Text>
-            </>
-          ) : (
-            <>
-              <Drumstick size={16} color="#DC2626" />
-              <Text style={styles.inheritsTextNonVeg}>{t('Adding to 🍗 Non-Veg Menu')}</Text>
-            </>
-          )}
+        {/* Classification Badge & Toggle */}
+        <View style={styles.typeToggleRow}>
+          <TouchableOpacity
+            style={[styles.typeBtn, menuType === 'veg' && styles.typeBtnVegActive]}
+            onPress={() => {
+              setMenuType('veg');
+              const vegCats = categories.filter(c => c.categoryType === 'veg');
+              if (vegCats.length > 0 && !vegCats.some(c => c.name === mealCategory)) {
+                setMealCategory(vegCats[0].name);
+              }
+            }}
+          >
+            <Leaf size={14} color={menuType === 'veg' ? '#fff' : '#16A34A'} />
+            <Text style={[styles.typeText, menuType === 'veg' && styles.typeTextActive]}>{t('Pure Veg')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.typeBtn, menuType === 'non_veg' && styles.typeBtnNonVegActive]}
+            onPress={() => {
+              setMenuType('non_veg');
+              const nonVegCats = categories.filter(c => c.categoryType === 'nonVeg');
+              if (nonVegCats.length > 0 && !nonVegCats.some(c => c.name === mealCategory)) {
+                setMealCategory(nonVegCats[0].name);
+              }
+            }}
+          >
+            <Drumstick size={14} color={menuType === 'non_veg' ? '#fff' : '#DC2626'} />
+            <Text style={[styles.typeText, menuType === 'non_veg' && styles.typeTextActive]}>{t('Non-Veg')}</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.label}>{t('Dish Name')} <Text style={styles.required}>*</Text></Text>
         <TextInput
           ref={nameRef}
           style={[styles.input, errors.name && styles.inputError]}
-          placeholder="e.g. Paneer Butter Masala, Chicken Biryani"
+          placeholder="Dish name"
           placeholderTextColor="#9CA3AF"
           value={name}
           onChangeText={setName}
@@ -140,7 +202,6 @@ export default function AddDishScreen() {
           returnKeyType="next"
           onSubmitEditing={() => priceRef.current?.focus()}
           blurOnSubmit={false}
-          autoFocus
         />
         {errors.name ? <Text style={styles.fieldError}>{errors.name}</Text> : null}
 
@@ -148,23 +209,19 @@ export default function AddDishScreen() {
         <Text style={styles.hint}>
           {menuType === 'veg' ? t('Categories for Veg') : t('Categories for Non-Veg')}
         </Text>
-        {loadingCategories ? (
-          <ActivityIndicator color="#1B4332" size="small" style={{ marginVertical: 8 }} />
-        ) : (
-          <View style={styles.chipRow}>
-            {availableCategories.map(cat => (
-              <TouchableOpacity
-                key={cat.id || cat.name}
-                style={[styles.chip, mealCategory === cat.name && styles.chipActive]}
-                onPress={() => setMealCategory(cat.name)}
-              >
-                <Text style={[styles.chipText, mealCategory === cat.name && styles.chipTextActive]}>
-                  {t(cat.name)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+        <View style={styles.chipRow}>
+          {availableCategories.map(cat => (
+            <TouchableOpacity
+              key={cat.id || cat.name}
+              style={[styles.chip, mealCategory === cat.name && styles.chipActive]}
+              onPress={() => setMealCategory(cat.name)}
+            >
+              <Text style={[styles.chipText, mealCategory === cat.name && styles.chipTextActive]}>
+                {t(cat.name)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
         {errors.category ? <Text style={styles.fieldError}>{errors.category}</Text> : null}
 
         <Text style={styles.label}>{t('Meal Type')} <Text style={styles.required}>*</Text></Text>
@@ -215,7 +272,7 @@ export default function AddDishScreen() {
           onPress={handleSave}
           disabled={saving}
         >
-          <Text style={styles.saveBtnText}>{saving ? t('Saving...') : t('Save Dish')}</Text>
+          <Text style={styles.saveBtnText}>{saving ? t('Updating...') : t('Update Dish')}</Text>
         </TouchableOpacity>
       </KeyboardAwareScrollView>
     </View>
@@ -226,13 +283,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   backBtn: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
+  deleteHeaderBtn: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { ...T.h2 },
   scroll: { padding: 16, paddingBottom: 20 },
   errorText: { color: '#EF4444', fontSize: scaleFont(10.5), marginBottom: 10, backgroundColor: '#FEF2F2', padding: 8, borderRadius: 8 },
-  inheritsBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F0FDF4', padding: 10, borderRadius: 10, borderLeftWidth: 4, borderLeftColor: '#16A34A', marginBottom: 14 },
-  inheritsBoxNonVeg: { backgroundColor: '#FEF2F2', borderLeftColor: '#DC2626' },
-  inheritsTextVeg: { fontSize: 11.5, fontWeight: '700', color: '#16A34A' },
-  inheritsTextNonVeg: { fontSize: 11.5, fontWeight: '700', color: '#DC2626' },
+  typeToggleRow: { flexDirection: 'row', gap: 8, backgroundColor: '#F3F4F6', padding: 4, borderRadius: 10, marginBottom: 14 },
+  typeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 8 },
+  typeBtnVegActive: { backgroundColor: '#16A34A' },
+  typeBtnNonVegActive: { backgroundColor: '#DC2626' },
+  typeText: { fontSize: 11.5, fontWeight: '600', color: '#6B7280' },
+  typeTextActive: { color: '#fff', fontWeight: '700' },
   label: { ...T.label, marginBottom: 4, marginTop: 12 },
   hint: { ...T.caption, color: '#9CA3AF', marginBottom: 6, marginTop: -2 },
   required: { color: '#DC2626' },

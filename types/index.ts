@@ -17,6 +17,7 @@ export interface Customer {
   created_at: string;
 }
 
+// ADD to Event interface:
 export interface Event {
   id: string;
   user_id: string;
@@ -31,14 +32,16 @@ export interface Event {
   advance_amount: number;
   payment_status: string;
   total_amount: number;
-  draft_id: string | null;
+  draft_id: string;
+  notes?: string | null;
+  attachment_photos: string[];        // ← ADD
+  attachment_docs: { name: string; uri: string }[];  // ← ADD
   created_at: string;
   updated_at: string;
-  customers?: Customer;
-  event_dates?: EventDate[];
-  event_menu_items?: EventMenuItem[];
+  customers?: any;
+  event_dates?: any[];
+  event_menu_items?: any[];
 }
-
 export interface EventDate {
   id: string;
   event_id: string;
@@ -52,11 +55,21 @@ export interface MenuItem {
   name: string;
   meal_type: string;
   menu_type: string;
+  categoryType?: 'veg' | 'nonVeg';
   meal_category: string;
   price: number;
   description: string | null;
   image_url: string | null;
   is_active: boolean;
+}
+
+export interface MenuCategory {
+  id: string;
+  user_id: string;
+  name: string;
+  categoryType: 'veg' | 'nonVeg';
+  meal_type?: string;
+  created_at?: string;
 }
 
 export interface EventMenuItem {
@@ -72,3 +85,4 @@ export interface EventMenuItem {
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snacks' | 'desserts' | 'beverages';
 export type EventType = 'wedding' | 'corporate' | 'birthday' | 'anniversary' | 'private_party';
 export type MenuType = 'veg' | 'non_veg';
+

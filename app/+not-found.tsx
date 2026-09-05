@@ -23,8 +23,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   text: {
-    fontSize: 20,
-    fontWeight: 600,
+    fontSize: 17,
+    fontWeight: '600',
   },
   link: {
     marginTop: 15,
