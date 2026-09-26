@@ -8,6 +8,8 @@ import { ChevronDown, ChevronUp, Plus, Trash2, Check, Leaf, Drumstick } from 'lu
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { getDishDisplayName, getEnglishDishName } from '@/utils/translations';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import KeyboardAwareScrollView from '@/components/KeyboardAwareScrollView';
@@ -38,6 +40,7 @@ function genId() { return Math.random().toString(36).slice(2, 10); }
 export default function SetupMenuScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t, language, getDishName } = useLanguage();
   const insets = useSafeAreaInsets();
 
   const setupDishNameRef = useRef<TextInput>(null);
@@ -143,10 +146,15 @@ export default function SetupMenuScreen() {
 
       // Save dishes
       await Promise.all(
-        dishes.map(dish =>
-          addDoc(collection(db, 'menu_items'), {
+        dishes.map(dish => {
+          const trimmed = dish.name.trim();
+          const tamilName = language === 'ta' ? trimmed : getDishDisplayName(trimmed, 'ta');
+          const englishName = language === 'ta' ? getEnglishDishName(trimmed) : trimmed;
+
+          return addDoc(collection(db, 'menu_items'), {
             user_id: user.uid,
-            name: dish.name,
+            name: englishName,
+            name_ta: tamilName,
             menu_type: dish.menu_type,
             categoryType: dish.categoryType,
             meal_type: dish.meal_type,
@@ -156,8 +164,8 @@ export default function SetupMenuScreen() {
             image_url: null,
             is_active: true,
             created_at: new Date().toISOString(),
-          })
-        )
+          });
+        })
       );
       router.replace('/(tabs)/dashboard');
     } catch (err: any) {
@@ -273,7 +281,7 @@ export default function SetupMenuScreen() {
                           {catDishes.map(dish => (
                             <View key={dish.id} style={styles.dishRow}>
                               <View style={[styles.dishDot, activeTab === 'nonVeg' && { backgroundColor: '#DC2626' }]} />
-                              <Text style={styles.dishName} numberOfLines={1}>{dish.name}</Text>
+                              <Text style={styles.dishName} numberOfLines={1}>{getDishName(dish.name)}</Text>
                               {dish.price ? (
                                 <Text style={styles.dishPrice}>₹{dish.price}</Text>
                               ) : null}

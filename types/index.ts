@@ -53,6 +53,7 @@ export interface MenuItem {
   id: string;
   user_id: string;
   name: string;
+  name_ta?: string | null;
   meal_type: string;
   menu_type: string;
   categoryType?: 'veg' | 'nonVeg';

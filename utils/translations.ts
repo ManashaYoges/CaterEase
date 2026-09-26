@@ -1,3 +1,5 @@
+
+
 export type Language = 'en' | 'ta';
 
 export const translations: Record<string, { en: string; ta: string }> = {
@@ -88,8 +90,18 @@ export const translations: Record<string, { en: string; ta: string }> = {
   'Dinner': { en: 'Dinner', ta: 'இரவு உணவு' },
   'Snacks': { en: 'Snacks', ta: 'சிற்றுண்டி' },
   'Main': { en: 'Main', ta: 'பிரதான உணவு' },
-  'Desserts': { en: 'Desserts', ta: 'இனிப்புகள்' },
+  'Desserts': { en: 'Desserts', ta: 'இனிப்பு' },
+  'Dessert': { en: 'Dessert', ta: 'இனிப்பு' },
   'Hot/Soft Beverages': { en: 'Hot/Soft Beverages', ta: 'சூடான/குளிர்ந்த பானங்கள்' },
+  'Beverages': { en: 'Beverages', ta: 'பானங்கள்' },
+  'Beverage': { en: 'Beverage', ta: 'பானம்' },
+  'breakfast': { en: 'Breakfast', ta: 'காலை உணவு' },
+  'lunch': { en: 'Lunch', ta: 'மதிய உணவு' },
+  'dinner': { en: 'Dinner', ta: 'இரவு உணவு' },
+  'snacks': { en: 'Snacks', ta: 'சிற்றுண்டி' },
+  'desserts': { en: 'Desserts', ta: 'இனிப்பு' },
+  'beverages': { en: 'Beverages', ta: 'பானங்கள்' },
+  'main': { en: 'Main', ta: 'பிரதான உணவு' },
   'No Veg dishes in this category': { en: 'No Veg dishes in this category', ta: 'இந்த பிரிவில் சைவ உணவுகள் இல்லை' },
   'No Non-Veg dishes in this category': { en: 'No Non-Veg dishes in this category', ta: 'இந்த பிரிவில் அசைவ உணவுகள் இல்லை' },
   'Delete Dish': { en: 'Delete Dish', ta: 'உணவை நீக்கு' },
@@ -187,15 +199,20 @@ export const translations: Record<string, { en: string; ta: string }> = {
   'Total Selected Items': { en: 'Total Selected Items', ta: 'மொத்த உணவுகள்' },
   'Available': { en: 'Available', ta: 'இருப்பவை' },
   'Sweet': { en: 'Sweet', ta: 'இனிப்பு' },
-  'Beverages': { en: 'Beverages', ta: 'பானங்கள்' },
   'Selected Menu': { en: 'Selected Menu', ta: 'தேர்ந்தெடுத்தவை' },
   'SECTION': { en: 'SECTION', ta: 'பிரிவு' },
-  'Breakfast Desserts': { en: 'Breakfast Desserts', ta: 'காலை இனிப்புகள்' },
+  'Breakfast Desserts': { en: 'Breakfast Desserts', ta: 'காலை இனிப்பு' },
   'Breakfast Beverages': { en: 'Breakfast Beverages', ta: 'காலை பானங்கள்' },
-  'Lunch Desserts': { en: 'Lunch Desserts', ta: 'மதிய இனிப்புகள்' },
+  'Lunch Desserts': { en: 'Lunch Desserts', ta: 'மதிய இனிப்பு' },
   'Lunch Beverages': { en: 'Lunch Beverages', ta: 'மதிய பானங்கள்' },
-  'Dinner Desserts': { en: 'Dinner Desserts', ta: 'இரவு இனிப்புகள்' },
+  'Dinner Desserts': { en: 'Dinner Desserts', ta: 'இரவு இனிப்பு' },
   'Dinner Beverages': { en: 'Dinner Beverages', ta: 'இரவு பானங்கள்' },
+  'breakfast_desserts': { en: 'Breakfast Desserts', ta: 'காலை இனிப்பு' },
+  'breakfast_beverages': { en: 'Breakfast Beverages', ta: 'காலை பானங்கள்' },
+  'lunch_desserts': { en: 'Lunch Desserts', ta: 'மதிய இனிப்பு' },
+  'lunch_beverages': { en: 'Lunch Beverages', ta: 'மதிய பானங்கள்' },
+  'dinner_desserts': { en: 'Dinner Desserts', ta: 'இரவு இனிப்பு' },
+  'dinner_beverages': { en: 'Dinner Beverages', ta: 'இரவு பானங்கள்' },
   'Items Count': { en: 'Items', ta: 'உணவுகள்' },
   'Clear': { en: 'Clear', ta: 'அழி' },
   'Clear All': { en: 'Clear All', ta: 'அனைத்தையும் நீக்கு' },
@@ -338,7 +355,486 @@ export const translations: Record<string, { en: string; ta: string }> = {
   'Thursday': { en: 'Thursday', ta: 'வியாழன்' },
   'Friday': { en: 'Friday', ta: 'வெள்ளி' },
   'Saturday': { en: 'Saturday', ta: 'சனி' },
+
+  // --- Dish Names Localization ---
+  // Breakfast items
+  'Idli': { en: 'Idli', ta: 'இட்லி' },
+  'Idly': { en: 'Idly', ta: 'இட்லி' },
+  'Mini Idli': { en: 'Mini Idli', ta: 'மினி இட்லி' },
+  'Sambar Idli': { en: 'Sambar Idli', ta: 'சாம்பார் இட்லி' },
+  'Podi Idli': { en: 'Podi Idli', ta: 'பொடி இட்லி' },
+  'Rava Idli': { en: 'Rava Idli', ta: 'ரவா இட்லி' },
+  'Kanchipuram Idli': { en: 'Kanchipuram Idli', ta: 'காஞ்சிபுரம் இட்லி' },
+  'Thatte Idli': { en: 'Thatte Idli', ta: 'தட்டே இட்லி' },
+  'Dosa': { en: 'Dosa', ta: 'தோசை' },
+  'Dosai': { en: 'Dosai', ta: 'தோசை' },
+  'Plain Dosa': { en: 'Plain Dosa', ta: 'சாதா தோசை' },
+  'Sada Dosa': { en: 'Sada Dosa', ta: 'சாதா தோசை' },
+  'Masala Dosa': { en: 'Masala Dosa', ta: 'மசாலா தோசை' },
+  'Masala Dosai': { en: 'Masala Dosai', ta: 'மசாலா தோசை' },
+  'Ghee Roast': { en: 'Ghee Roast', ta: 'நெய் ரோஸ்ட்' },
+  'Ghee Dosa': { en: 'Ghee Dosa', ta: 'நெய் தோசை' },
+  'Nei Roast': { en: 'Nei Roast', ta: 'நெய் ரோஸ்ட்' },
+  'Podi Dosa': { en: 'Podi Dosa', ta: 'பொடி தோசை' },
+  'Onion Dosa': { en: 'Onion Dosa', ta: 'வெங்காய தோசை' },
+  'Onion Dosai': { en: 'Onion Dosai', ta: 'வெங்காய தோசை' },
+  'Rava Dosa': { en: 'Rava Dosa', ta: 'ரவா தோசை' },
+  'Onion Rava Dosa': { en: 'Onion Rava Dosa', ta: 'வெங்காய ரவா தோசை' },
+  'Set Dosa': { en: 'Set Dosa', ta: 'செட் தோசை' },
+  'Kal Dosa': { en: 'Kal Dosa', ta: 'கல் தோசை' },
+  'Egg Dosa': { en: 'Egg Dosa', ta: 'முட்டை தோசை' },
+  'Muttai Dosa': { en: 'Muttai Dosa', ta: 'முட்டை தோசை' },
+  'Cheese Dosa': { en: 'Cheese Dosa', ta: 'சீஸ் தோசை' },
+  'Mysore Masala Dosa': { en: 'Mysore Masala Dosa', ta: 'மைசூர் மசாலா தோசை' },
+  'Pongal': { en: 'Pongal', ta: 'பொங்கல்' },
+  'Ven Pongal': { en: 'Ven Pongal', ta: 'வெண் பொங்கல்' },
+  'Ghee Pongal': { en: 'Ghee Pongal', ta: 'நெய் பொங்கல்' },
+  'Sweet Pongal': { en: 'Sweet Pongal', ta: 'சர்க்கரை பொங்கல்' },
+  'Sakkarai Pongal': { en: 'Sakkarai Pongal', ta: 'சர்க்கரை பொங்கல்' },
+  'Poori': { en: 'Poori', ta: 'பூரி' },
+  'Puri': { en: 'Puri', ta: 'பூரி' },
+  'Poori Masala': { en: 'Poori Masala', ta: 'பூரி மசாலா' },
+  'Puri Masala': { en: 'Puri Masala', ta: 'பூரி மசாலா' },
+  'Chole Bhature': { en: 'Chole Bhature', ta: 'சோலே பதூரே' },
+  'Chola Poori': { en: 'Chola Poori', ta: 'சோலா பூரி' },
+  'Bhature': { en: 'Bhature', ta: 'பதூரே' },
+  'Chole': { en: 'Chole', ta: 'சோலே' },
+  'Vada': { en: 'Vada', ta: 'வடை' },
+  'Vadai': { en: 'Vadai', ta: 'வடை' },
+  'Medu Vada': { en: 'Medu Vada', ta: 'மெது வடை' },
+  'Medhu Vadai': { en: 'Medhu Vadai', ta: 'மெது வடை' },
+  'Masala Vada': { en: 'Masala Vada', ta: 'மசாலா வடை' },
+  'Paruppu Vadai': { en: 'Paruppu Vadai', ta: 'பருப்பு வடை' },
+  'Sambar Vada': { en: 'Sambar Vada', ta: 'சாம்பார் வடை' },
+  'Sambar Vadai': { en: 'Sambar Vadai', ta: 'சாம்பார் வடை' },
+  'Rasa Vada': { en: 'Rasa Vada', ta: 'ரச வடை' },
+  'Curd Vada': { en: 'Curd Vada', ta: 'தயிர் வடை' },
+  'Thayir Vadai': { en: 'Thayir Vadai', ta: 'தயிர் வடை' },
+  'Upma': { en: 'Upma', ta: 'உப்புமா' },
+  'Rava Upma': { en: 'Rava Upma', ta: 'ரவா உப்புமா' },
+  'Semiya Upma': { en: 'Semiya Upma', ta: 'சேமியா உப்புமா' },
+  'Vermicelli Upma': { en: 'Vermicelli Upma', ta: 'சேமியா உப்புமா' },
+  'Wheat Upma': { en: 'Wheat Upma', ta: 'கோதுமை உப்புமா' },
+  'Khara Bath': { en: 'Khara Bath', ta: 'காரா பாத்' },
+  'Puttu': { en: 'Puttu', ta: 'புட்டு' },
+  'Ragi Puttu': { en: 'Ragi Puttu', ta: 'ராகி புட்டு' },
+  'Rice Puttu': { en: 'Rice Puttu', ta: 'அரிசி புட்டு' },
+  'Appam': { en: 'Appam', ta: 'ஆப்பம்' },
+  'Egg Appam': { en: 'Egg Appam', ta: 'முட்டை ஆப்பம்' },
+  'Idiyappam': { en: 'Idiyappam', ta: 'இடியாப்பம்' },
+  'Uttapam': { en: 'Uttapam', ta: 'ஊத்தப்பம்' },
+  'Uthappam': { en: 'Uthappam', ta: 'ஊத்தப்பம்' },
+  'Uthoppam': { en: 'Uthoppam', ta: 'ஊத்தப்பம்' },
+  'Onion Uttapam': { en: 'Onion Uttapam', ta: 'வெங்காய ஊத்தப்பம்' },
+  'Onion Uthappam': { en: 'Onion Uthappam', ta: 'வெங்காய ஊத்தப்பம்' },
+  'Tomato Uttapam': { en: 'Tomato Uttapam', ta: 'தக்காளி ஊத்தப்பம்' },
+  'Podi Uttapam': { en: 'Podi Uttapam', ta: 'பொடி ஊத்தப்பம்' },
+  'Mixed Veg Uttapam': { en: 'Mixed Veg Uttapam', ta: 'காய்கறி ஊத்தப்பம்' },
+  'Kuzhi Paniyaram': { en: 'Kuzhi Paniyaram', ta: 'குழி பணியாரம்' },
+  'Paniyaram': { en: 'Paniyaram', ta: 'பணியாரம்' },
+  'Sweet Paniyaram': { en: 'Sweet Paniyaram', ta: 'இனிப்பு பணியாரம்' },
+  'Kara Paniyaram': { en: 'Kara Paniyaram', ta: 'கார பணியாரம்' },
+  'Sandwich': { en: 'Sandwich', ta: 'சாண்ட்விச்' },
+  'Veg Sandwich': { en: 'Veg Sandwich', ta: 'காய்கறி சாண்ட்விச்' },
+  'Toast': { en: 'Toast', ta: 'டோஸ்ட்' },
+  'Bread Toast': { en: 'Bread Toast', ta: 'பிரட் டோஸ்ட்' },
+
+  // Rice & Biryanis
+  'Biryani': { en: 'Biryani', ta: 'பிரியாணி' },
+  'Briyani': { en: 'Briyani', ta: 'பிரியாணி' },
+  'Chicken Biryani': { en: 'Chicken Biryani', ta: 'சிக்கன் பிரியாணி' },
+  'Chicken Briyani': { en: 'Chicken Briyani', ta: 'சிக்கன் பிரியாணி' },
+  'Mutton Biryani': { en: 'Mutton Biryani', ta: 'மட்டன் பிரியாணி' },
+  'Mutton Briyani': { en: 'Mutton Briyani', ta: 'மட்டன் பிரியாணி' },
+  'Veg Biryani': { en: 'Veg Biryani', ta: 'வெஜ் பிரியாணி' },
+  'Vegetable Biryani': { en: 'Vegetable Biryani', ta: 'காய்கறி பிரியாணி' },
+  'Dum Biryani': { en: 'Dum Biryani', ta: 'தம் பிரியாணி' },
+  'Chicken Dum Biryani': { en: 'Chicken Dum Biryani', ta: 'சிக்கன் தம் பிரியாணி' },
+  'Mutton Dum Biryani': { en: 'Mutton Dum Biryani', ta: 'மட்டன் தம் பிரியாணி' },
+  'Hyderabadi Biryani': { en: 'Hyderabadi Biryani', ta: 'ஹைதராபாதி பிரியாணி' },
+  'Ambur Biryani': { en: 'Ambur Biryani', ta: 'ஆம்பூர் பிரியாணி' },
+  'Dindigul Biryani': { en: 'Dindigul Biryani', ta: 'திண்டுக்கல் பிரியாணி' },
+  'Egg Biryani': { en: 'Egg Biryani', ta: 'முட்டை பிரியாணி' },
+  'Fish Biryani': { en: 'Fish Biryani', ta: 'மீன் பிரியாணி' },
+  'Prawn Biryani': { en: 'Prawn Biryani', ta: 'இறால் பிரியாணி' },
+  'Mushroom Biryani': { en: 'Mushroom Biryani', ta: 'காளான் பிரியாணி' },
+  'Paneer Biryani': { en: 'Paneer Biryani', ta: 'பன்னீர் பிரியாணி' },
+  'Pulao': { en: 'Pulao', ta: 'புலாவ்' },
+  'Pulav': { en: 'Pulav', ta: 'புலாவ்' },
+  'Veg Pulao': { en: 'Veg Pulao', ta: 'வெஜ் புலாவ்' },
+  'Vegetable Pulao': { en: 'Vegetable Pulao', ta: 'காய்கறி புலாவ்' },
+  'Peas Pulao': { en: 'Peas Pulao', ta: 'பட்டாணி புலாவ்' },
+  'Kashmiri Pulao': { en: 'Kashmiri Pulao', ta: 'காஷ்மீரி புலாவ்' },
+  'Curd Rice': { en: 'Curd Rice', ta: 'தயிர் சாதம்' },
+  'Thayir Sadam': { en: 'Thayir Sadam', ta: 'தயிர் சாதம்' },
+  'Lemon Rice': { en: 'Lemon Rice', ta: 'எலுமிச்சை சாதம்' },
+  'Elumichai Sadam': { en: 'Elumichai Sadam', ta: 'எலுமிச்சை சாதம்' },
+  'Tamarind Rice': { en: 'Tamarind Rice', ta: 'புளி சாதம்' },
+  'Puliyodarai': { en: 'Puliyodarai', ta: 'புளியோதரை' },
+  'Puliyogare': { en: 'Puliyogare', ta: 'புளியோதரை' },
+  'Tomato Rice': { en: 'Tomato Rice', ta: 'தக்காளி சாதம்' },
+  'Thakkali Sadam': { en: 'Thakkali Sadam', ta: 'தக்காளி சாதம்' },
+  'Sambar Rice': { en: 'Sambar Rice', ta: 'சாம்பார் சாதம்' },
+  'Sambar Sadam': { en: 'Sambar Sadam', ta: 'சாம்பார் சாதம்' },
+  'Jeera Rice': { en: 'Jeera Rice', ta: 'சீரக சாதம்' },
+  'Ghee Rice': { en: 'Ghee Rice', ta: 'நெய் சாதம்' },
+  'Coconut Rice': { en: 'Coconut Rice', ta: 'தேங்காய் சாதம்' },
+  'Thengai Sadam': { en: 'Thengai Sadam', ta: 'தேங்காய் சாதம்' },
+  'Coriander Rice': { en: 'Coriander Rice', ta: 'கொத்தமல்லி சாதம்' },
+  'Mint Rice': { en: 'Mint Rice', ta: 'புதினா சாதம்' },
+  'Bisi Bele Bath': { en: 'Bisi Bele Bath', ta: 'பிசிபேலே பாத்' },
+  'Fried Rice': { en: 'Fried Rice', ta: 'ஃப்ரைட் ரைஸ்' },
+  'Veg Fried Rice': { en: 'Veg Fried Rice', ta: 'வெஜ் ஃப்ரைட் ரைஸ்' },
+  'Egg Fried Rice': { en: 'Egg Fried Rice', ta: 'எக் ஃப்ரைட் ரைஸ்' },
+  'Chicken Fried Rice': { en: 'Chicken Fried Rice', ta: 'சிக்கன் ஃப்ரைட் ரைஸ்' },
+  'Schezwan Fried Rice': { en: 'Schezwan Fried Rice', ta: 'செஷ்வான் ஃப்ரைட் ரைஸ்' },
+  'Noodles': { en: 'Noodles', ta: 'நூடுல்ஸ்' },
+  'Veg Noodles': { en: 'Veg Noodles', ta: 'வெஜ் நூடுல்ஸ்' },
+  'Egg Noodles': { en: 'Egg Noodles', ta: 'எக் நூடுல்ஸ்' },
+  'Chicken Noodles': { en: 'Chicken Noodles', ta: 'சிக்கன் நூடுல்ஸ்' },
+  'White Rice': { en: 'White Rice', ta: 'வெள்ளை சாதம்' },
+  'Steamed Rice': { en: 'Steamed Rice', ta: 'சாதம்' },
+  'Plain Rice': { en: 'Plain Rice', ta: 'சாதம்' },
+  'Sadam': { en: 'Sadam', ta: 'சாதம்' },
+
+  // Curries, Sambars & Gravies
+  'Sambar': { en: 'Sambar', ta: 'சாம்பார்' },
+  'Rasam': { en: 'Rasam', ta: 'ரசம்' },
+  'Tomato Rasam': { en: 'Tomato Rasam', ta: 'தக்காளி ரசம்' },
+  'Pepper Rasam': { en: 'Pepper Rasam', ta: 'மிளகு ரசம்' },
+  'Milagu Rasam': { en: 'Milagu Rasam', ta: 'மிளகு ரசம்' },
+  'Dal': { en: 'Dal', ta: 'தால்' },
+  'Daal': { en: 'Daal', ta: 'தால்' },
+  'Paruppu': { en: 'Paruppu', ta: 'பருப்பு' },
+  'Dal Tadka': { en: 'Dal Tadka', ta: 'தால் தட்கா' },
+  'Dal Fry': { en: 'Dal Fry', ta: 'தால் ஃப்ரை' },
+  'Dal Makhani': { en: 'Dal Makhani', ta: 'தால் மக்கானி' },
+  'Paneer': { en: 'Paneer', ta: 'பன்னீர்' },
+  'Paneer Butter Masala': { en: 'Paneer Butter Masala', ta: 'பன்னீர் பட்டர் மசாலா' },
+  'Palak Paneer': { en: 'Palak Paneer', ta: 'பாலக் பன்னீர்' },
+  'Kadai Paneer': { en: 'Kadai Paneer', ta: 'கடாய் பன்னீர்' },
+  'Paneer Tikka Masala': { en: 'Paneer Tikka Masala', ta: 'பன்னீர் டிக்கா மசாலா' },
+  'Mattar Paneer': { en: 'Mattar Paneer', ta: 'மட்டர் பன்னீர்' },
+  'Shahi Paneer': { en: 'Shahi Paneer', ta: 'ஷாஹி பன்னீர்' },
+  'Kurma': { en: 'Kurma', ta: 'குருமா' },
+  'Korma': { en: 'Korma', ta: 'குருமா' },
+  'Veg Kurma': { en: 'Veg Kurma', ta: 'வெஜ் குருமா' },
+  'Vegetable Kurma': { en: 'Vegetable Kurma', ta: 'காய்கறி குருமா' },
+  'Mixed Veg Curry': { en: 'Mixed Veg Curry', ta: 'கலவை காய்கறி குழம்பு' },
+  'Veg Kadai': { en: 'Veg Kadai', ta: 'வெஜ் கடாய்' },
+  'Gravy': { en: 'Gravy', ta: 'கிரேவி' },
+  'Curry': { en: 'Curry', ta: 'குழம்பு' },
+  'Aloo Gobi': { en: 'Aloo Gobi', ta: 'ஆலு கோபி' },
+  'Aloo Mattar': { en: 'Aloo Mattar', ta: 'ஆலு மட்டர்' },
+  'Chana Masala': { en: 'Chana Masala', ta: 'சென்னா மசாலா' },
+  'Rajma Masala': { en: 'Rajma Masala', ta: 'ராஜ்மா மசாலா' },
+  'Mushroom Masala': { en: 'Mushroom Masala', ta: 'காளான் மசாலா' },
+  'Mushroom Gravy': { en: 'Mushroom Gravy', ta: 'காளான் கிரேவி' },
+  'Vatha Kuzhambu': { en: 'Vatha Kuzhambu', ta: 'வத்த குழம்பு' },
+  'Mor Kuzhambu': { en: 'Mor Kuzhambu', ta: 'மோர் குழம்பு' },
+  'Kara Kuzhambu': { en: 'Kara Kuzhambu', ta: 'கார குழம்பு' },
+  'Ennai Kathirikai': { en: 'Ennai Kathirikai', ta: 'எண்ணெய் கத்திரிக்காய்' },
+  'Poondu Kuzhambu': { en: 'Poondu Kuzhambu', ta: 'பூண்டு குழம்பு' },
+  'Avial': { en: 'Avial', ta: 'அவியல்' },
+  'Kootu': { en: 'Kootu', ta: 'கூட்டு' },
+  'Poriyal': { en: 'Poriyal', ta: 'பொரியல்' },
+  'Urulai Roast': { en: 'Urulai Roast', ta: 'உருளைக்கிழங்கு வறுவல்' },
+  'Potato Roast': { en: 'Potato Roast', ta: 'உருளைக்கிழங்கு வறுவல்' },
+  'Potato Fry': { en: 'Potato Fry', ta: 'உருளைக்கிழங்கு வறுவல்' },
+  'Cabbage Poriyal': { en: 'Cabbage Poriyal', ta: 'முட்டைக்கோஸ் பொரியல்' },
+  'Beans Poriyal': { en: 'Beans Poriyal', ta: 'பீன்ஸ் பொரியல்' },
+  'Carrot Poriyal': { en: 'Carrot Poriyal', ta: 'கேரட் பொரியல்' },
+  'Beetroot Poriyal': { en: 'Beetroot Poriyal', ta: 'பீட்ரூட் பொரியல்' },
+  'Vazhaikkai Poriyal': { en: 'Vazhaikkai Poriyal', ta: 'வாழைக்காய் வறுவல்' },
+  'Keerai Poriyal': { en: 'Keerai Poriyal', ta: 'கீரை பொரியல்' },
+  'Keerai Kootu': { en: 'Keerai Kootu', ta: 'கீரை கூட்டு' },
+  'Appalam': { en: 'Appalam', ta: 'அப்பளம்' },
+  'Papad': { en: 'Papad', ta: 'அப்பளம்' },
+  'Vadavam': { en: 'Vadavam', ta: 'வடகம்' },
+  'Pickle': { en: 'Pickle', ta: 'ஊறுகாய்' },
+  'Mango Pickle': { en: 'Mango Pickle', ta: 'மாங்காய் ஊறுகாய்' },
+  'Lime Pickle': { en: 'Lime Pickle', ta: 'எலுமிச்சை ஊறுகாய்' },
+  'Raitha': { en: 'Raitha', ta: 'பச்சடி' },
+  'Raita': { en: 'Raita', ta: 'பச்சடி' },
+  'Pachadi': { en: 'Pachadi', ta: 'பச்சடி' },
+  'Onion Raitha': { en: 'Onion Raitha', ta: 'வெங்காய பச்சடி' },
+  'Cucumber Raitha': { en: 'Cucumber Raitha', ta: 'வெள்ளரிக்காய் பச்சடி' },
+  'Boondi Raitha': { en: 'Boondi Raitha', ta: 'பூந்தி ரைத்தா' },
+  'Curd': { en: 'Curd', ta: 'தயிர்' },
+
+  // Non-Veg dishes
+  'Chicken': { en: 'Chicken', ta: 'சிக்கன்' },
+  'Chicken Curry': { en: 'Chicken Curry', ta: 'சிக்கன் குழம்பு' },
+  'Chicken Gravy': { en: 'Chicken Gravy', ta: 'சிக்கன் கிரேவி' },
+  'Chicken Kuzhambu': { en: 'Chicken Kuzhambu', ta: 'சிக்கன் குழம்பு' },
+  'Chicken 65': { en: 'Chicken 65', ta: 'சிக்கன் 65' },
+  'Chicken Fry': { en: 'Chicken Fry', ta: 'சிக்கன் வறுவல்' },
+  'Chicken Sukka': { en: 'Chicken Sukka', ta: 'சிக்கன் சுக்கா' },
+  'Pepper Chicken': { en: 'Pepper Chicken', ta: 'பெப்பர் சிக்கன்' },
+  'Chettinad Chicken': { en: 'Chettinad Chicken', ta: 'செட்டிநாடு சிக்கன்' },
+  'Butter Chicken': { en: 'Butter Chicken', ta: 'பட்டர் சிக்கன்' },
+  'Chicken Tikka': { en: 'Chicken Tikka', ta: 'சிக்கன் டிக்கா' },
+  'Chicken Tikka Masala': { en: 'Chicken Tikka Masala', ta: 'சிக்கன் டிக்கா மசாலா' },
+  'Chicken Kebab': { en: 'Chicken Kebab', ta: 'சிக்கன் கபாப்' },
+  'Kebab': { en: 'Kebab', ta: 'கபாப்' },
+  'Tikka': { en: 'Tikka', ta: 'டிக்கா' },
+  'Tandoori Chicken': { en: 'Tandoori Chicken', ta: 'தந்தூரி சிக்கன்' },
+  'Chilli Chicken': { en: 'Chilli Chicken', ta: 'சில்லி சிக்கன்' },
+  'Chicken Lollipop': { en: 'Chicken Lollipop', ta: 'சிக்கன் லாலிபாப்' },
+  'Kadai Chicken': { en: 'Kadai Chicken', ta: 'கடாய் சிக்கன்' },
+  'Mutton': { en: 'Mutton', ta: 'மட்டன்' },
+  'Mutton Curry': { en: 'Mutton Curry', ta: 'மட்டன் குழம்பு' },
+  'Mutton Gravy': { en: 'Mutton Gravy', ta: 'மட்டன் கிரேவி' },
+  'Mutton Kuzhambu': { en: 'Mutton Kuzhambu', ta: 'மட்டன் குழம்பு' },
+  'Mutton Sukka': { en: 'Mutton Sukka', ta: 'மட்டன் சுக்கா' },
+  'Mutton Chukka': { en: 'Mutton Chukka', ta: 'மட்டன் சுக்கா' },
+  'Mutton Pepper Fry': { en: 'Mutton Pepper Fry', ta: 'மட்டன் பெப்பர் ஃப்ரை' },
+  'Mutton Chops': { en: 'Mutton Chops', ta: 'மட்டன் சாப்ஸ்' },
+  'Mutton Rogan Josh': { en: 'Mutton Rogan Josh', ta: 'மட்டன் ரோகன் ஜோஷ்' },
+  'Mutton Korma': { en: 'Mutton Korma', ta: 'மட்டன் குருமா' },
+  'Fish': { en: 'Fish', ta: 'மீன்' },
+  'Fish Curry': { en: 'Fish Curry', ta: 'மீன் குழம்பு' },
+  'Fish Fry': { en: 'Fish Fry', ta: 'மீன் வறுவல்' },
+  'Meen Kuzhambu': { en: 'Meen Kuzhambu', ta: 'மீன் குழம்பு' },
+  'Meen Varuval': { en: 'Meen Varuval', ta: 'மீன் வறுவல்' },
+  'Vanjaram Fish Fry': { en: 'Vanjaram Fish Fry', ta: 'வஞ்சிரம் மீன் வறுவல்' },
+  'Fish Tikka': { en: 'Fish Tikka', ta: 'மீன் டிக்கா' },
+  'Prawn': { en: 'Prawn', ta: 'இறால்' },
+  'Prawn Curry': { en: 'Prawn Curry', ta: 'இறால் குழம்பு' },
+  'Prawn Masala': { en: 'Prawn Masala', ta: 'இறால் மசாலா' },
+  'Prawn Fry': { en: 'Prawn Fry', ta: 'இறால் வறுவல்' },
+  'Prawn Thokku': { en: 'Prawn Thokku', ta: 'இறால் தொக்கு' },
+  'Crab': { en: 'Crab', ta: 'நண்டு' },
+  'Crab Curry': { en: 'Crab Curry', ta: 'நண்டு குழம்பு' },
+  'Crab Masala': { en: 'Crab Masala', ta: 'நண்டு மசாலா' },
+  'Nandu Masala': { en: 'Nandu Masala', ta: 'நண்டு மசாலா' },
+  'Egg': { en: 'Egg', ta: 'முட்டை' },
+  'Egg Curry': { en: 'Egg Curry', ta: 'முட்டை குழம்பு' },
+  'Egg Masala': { en: 'Egg Masala', ta: 'முட்டை மசாலா' },
+  'Egg Gravy': { en: 'Egg Gravy', ta: 'முட்டை கிரேவி' },
+  'Egg Roast': { en: 'Egg Roast', ta: 'முட்டை ரோஸ்ட்' },
+  'Boiled Egg': { en: 'Boiled Egg', ta: 'அவித்த முட்டை' },
+  'Omelette': { en: 'Omelette', ta: 'ஆம்லெட்' },
+  'Egg Podimas': { en: 'Egg Podimas', ta: 'முட்டை பொடிமாஸ்' },
+
+  // Breads & Rotis
+  'Naan': { en: 'Naan', ta: 'நான்' },
+  'Butter Naan': { en: 'Butter Naan', ta: 'பட்டர் நான்' },
+  'Garlic Naan': { en: 'Garlic Naan', ta: 'கார்லிக் நான்' },
+  'Roti': { en: 'Roti', ta: 'ரொட்டி' },
+  'Tandoori Roti': { en: 'Tandoori Roti', ta: 'தந்தூரி ரொட்டி' },
+  'Chapati': { en: 'Chapati', ta: 'சப்பாத்தி' },
+  'Chappathi': { en: 'Chappathi', ta: 'சப்பாத்தி' },
+  'Phulka': { en: 'Phulka', ta: 'புல்கா' },
+  'Parotta': { en: 'Parotta', ta: 'பரோட்டா' },
+  'Barotta': { en: 'Barotta', ta: 'பரோட்டா' },
+  'Bun Parotta': { en: 'Bun Parotta', ta: 'பன் பரோட்டா' },
+  'Ceylon Parotta': { en: 'Ceylon Parotta', ta: 'சிலோன் பரோட்டா' },
+  'Kothu Parotta': { en: 'Kothu Parotta', ta: 'கொத்து பரோட்டா' },
+  'Veg Kothu Parotta': { en: 'Veg Kothu Parotta', ta: 'வெஜ் கொத்து பரோட்டா' },
+  'Egg Kothu Parotta': { en: 'Egg Kothu Parotta', ta: 'எக் கொத்து பரோட்டா' },
+  'Chicken Kothu Parotta': { en: 'Chicken Kothu Parotta', ta: 'சிக்கன் கொத்து பரோட்டா' },
+  'Paratha': { en: 'Paratha', ta: 'பராத்தா' },
+  'Aloo Paratha': { en: 'Aloo Paratha', ta: 'ஆலு பராத்தா' },
+  'Paneer Paratha': { en: 'Paneer Paratha', ta: 'பன்னீர் பராத்தா' },
+  'Rumali Roti': { en: 'Rumali Roti', ta: 'ருமாலி ரொட்டி' },
+  'Kulcha': { en: 'Kulcha', ta: 'குல்சா' },
+
+  // Desserts & Sweets
+  'Gulab Jamun': { en: 'Gulab Jamun', ta: 'குலாப் ஜாமுன்' },
+  'Gulab': { en: 'Gulab', ta: 'குலாப் ஜாமுன்' },
+  'Jamun': { en: 'Jamun', ta: 'ஜாமுன்' },
+  'Kala Jamun': { en: 'Kala Jamun', ta: 'காலா ஜாமுன்' },
+  'Rasgulla': { en: 'Rasgulla', ta: 'ரசகுல்லா' },
+  'Rasmalai': { en: 'Rasmalai', ta: 'ரஸ்மலாய்' },
+  'Payasam': { en: 'Payasam', ta: 'பாயாசம்' },
+  'Paal Payasam': { en: 'Paal Payasam', ta: 'பால் பாயாசம்' },
+  'Semiya Payasam': { en: 'Semiya Payasam', ta: 'சேமியா பாயாசம்' },
+  'Paruppu Payasam': { en: 'Paruppu Payasam', ta: 'பருப்பு பாயாசம்' },
+  'Elaneer Payasam': { en: 'Elaneer Payasam', ta: 'இளநீர் பாயாசம்' },
+  'Javvarisi Payasam': { en: 'Javvarisi Payasam', ta: 'ஜவ்வரிசி பாயாசம்' },
+  'Kheer': { en: 'Kheer', ta: 'கீர்' },
+  'Halwa': { en: 'Halwa', ta: 'அல்வா' },
+  'Halwaa': { en: 'Halwaa', ta: 'அல்வா' },
+  'Tirunelveli Halwa': { en: 'Tirunelveli Halwa', ta: 'திருநெல்வேலி அல்வா' },
+  'Carrot Halwa': { en: 'Carrot Halwa', ta: 'கேரட் அல்வா' },
+  'Gajar Ka Halwa': { en: 'Gajar Ka Halwa', ta: 'கேரட் அல்வா' },
+  'Wheat Halwa': { en: 'Wheat Halwa', ta: 'கோதுமை அல்வா' },
+  'Godhumai Halwa': { en: 'Godhumai Halwa', ta: 'கோதுமை அல்வா' },
+  'Beetroot Halwa': { en: 'Beetroot Halwa', ta: 'பீட்ரூட் அல்வா' },
+  'Ice Cream': { en: 'Ice Cream', ta: 'ஐஸ்கிரீம்' },
+  'Vanilla Ice Cream': { en: 'Vanilla Ice Cream', ta: 'வெண்ணிலா ஐஸ்கிரீம்' },
+  'Chocolate Ice Cream': { en: 'Chocolate Ice Cream', ta: 'சாக்லேட் ஐஸ்கிரீம்' },
+  'Strawberry Ice Cream': { en: 'Strawberry Ice Cream', ta: 'ஸ்ட்ராபெரி ஐஸ்கிரீம்' },
+  'Butterscotch Ice Cream': { en: 'Butterscotch Ice Cream', ta: 'பட்டர்ஸ்காட்ச் ஐஸ்கிரீம்' },
+  'Mango Ice Cream': { en: 'Mango Ice Cream', ta: 'மாம்பழ ஐஸ்கிரீம்' },
+  'Kulfi': { en: 'Kulfi', ta: 'குல்ஃபி' },
+  'Malai Kulfi': { en: 'Malai Kulfi', ta: 'மலாய் குல்ஃபி' },
+  'Kesari': { en: 'Kesari', ta: 'கேசரி' },
+  'Rava Kesari': { en: 'Rava Kesari', ta: 'ரவா கேசரி' },
+  'Pineapple Kesari': { en: 'Pineapple Kesari', ta: 'அன்னாசி கேசரி' },
+  'Semiya Kesari': { en: 'Semiya Kesari', ta: 'சேமியா கேசரி' },
+  'Mysore Pak': { en: 'Mysore Pak', ta: 'மைசூர் பாக்' },
+  'Ghee Mysore Pak': { en: 'Ghee Mysore Pak', ta: 'நெய் மைசூர் பாக்' },
+  'Ladoo': { en: 'Ladoo', ta: 'லட்டு' },
+  'Laddu': { en: 'Laddu', ta: 'லட்டு' },
+  'Boondi Ladoo': { en: 'Boondi Ladoo', ta: 'பூந்தி லட்டு' },
+  'Motichoor Ladoo': { en: 'Motichoor Ladoo', ta: 'மோதிசூர் லட்டு' },
+  'Jalebi': { en: 'Jalebi', ta: 'ஜிலேபி' },
+  'Jangiri': { en: 'Jangiri', ta: 'ஜாங்கிரி' },
+  'Badusha': { en: 'Badusha', ta: 'பாதுஷா' },
+  'Balushahi': { en: 'Balushahi', ta: 'பாதுஷா' },
+  'Peda': { en: 'Peda', ta: 'பேடா' },
+  'Milk Peda': { en: 'Milk Peda', ta: 'பால் பேடா' },
+  'Paal Peda': { en: 'Paal Peda', ta: 'பால் பேடா' },
+  'Kaju Katli': { en: 'Kaju Katli', ta: 'காஜு கத்லி' },
+  'Soan Papdi': { en: 'Soan Papdi', ta: 'சோன் பப்டி' },
+  'Brownie': { en: 'Brownie', ta: 'பிரவுனி' },
+  'Cake': { en: 'Cake', ta: 'கேக்' },
+  'Pastry': { en: 'Pastry', ta: 'பேஸ்ட்ரி' },
+  'Fruit Salad': { en: 'Fruit Salad', ta: 'பழ சாலட்' },
+
+  // Beverages
+  'Tea': { en: 'Tea', ta: 'தேநீர்' },
+  'Chai': { en: 'Chai', ta: 'தேநீர்' },
+  'Masala Tea': { en: 'Masala Tea', ta: 'மசாலா தேநீர்' },
+  'Masala Chai': { en: 'Masala Chai', ta: 'மசாலா தேநீர்' },
+  'Ginger Tea': { en: 'Ginger Tea', ta: 'இஞ்சி தேநீர்' },
+  'Inji Tea': { en: 'Inji Tea', ta: 'இஞ்சி தேநீர்' },
+  'Green Tea': { en: 'Green Tea', ta: 'கிரீன் டீ' },
+  'Black Tea': { en: 'Black Tea', ta: 'பிளாக் டீ' },
+  'Coffee': { en: 'Coffee', ta: 'காபி' },
+  'Filter Coffee': { en: 'Filter Coffee', ta: 'ஃபில்டர் காபி' },
+  'Cold Coffee': { en: 'Cold Coffee', ta: 'கோல்ட் காபி' },
+  'Black Coffee': { en: 'Black Coffee', ta: 'பிளாக் காபி' },
+  'Cappuccino': { en: 'Cappuccino', ta: 'கப்புச்சினோ' },
+  'Milk': { en: 'Milk', ta: 'பால்' },
+  'Badam Milk': { en: 'Badam Milk', ta: 'பாதாம் பால்' },
+  'Rose Milk': { en: 'Rose Milk', ta: 'ரோஸ் மில்க்' },
+  'Buttermilk': { en: 'Buttermilk', ta: 'மோர்' },
+  'Moru': { en: 'Moru', ta: 'மோர்' },
+  'Neer Mor': { en: 'Neer Mor', ta: 'நீர் மோர்' },
+  'Chaas': { en: 'Chaas', ta: 'மோர்' },
+  'Lassi': { en: 'Lassi', ta: 'லஸ்ஸி' },
+  'Sweet Lassi': { en: 'Sweet Lassi', ta: 'ஸ்வீட் லஸ்ஸி' },
+  'Mango Lassi': { en: 'Mango Lassi', ta: 'மாம்பழ லஸ்ஸி' },
+  'Juice': { en: 'Juice', ta: 'பழச்சாறு' },
+  'Fresh Juice': { en: 'Fresh Juice', ta: 'புதிய பழச்சாறு' },
+  'Orange Juice': { en: 'Orange Juice', ta: 'ஆரஞ்சு ஜூஸ்' },
+  'Apple Juice': { en: 'Apple Juice', ta: 'ஆப்பிள் ஜூஸ்' },
+  'Mango Juice': { en: 'Mango Juice', ta: 'மாம்பழ ஜூஸ்' },
+  'Watermelon Juice': { en: 'Watermelon Juice', ta: 'தர்பூசணி ஜூஸ்' },
+  'Pineapple Juice': { en: 'Pineapple Juice', ta: 'அன்னாசி ஜூஸ்' },
+  'Lemon Juice': { en: 'Lemon Juice', ta: 'எலுமிச்சை ஜூஸ்' },
+  'Lime Juice': { en: 'Lime Juice', ta: 'எலுமிச்சை ஜூஸ்' },
+  'Nannari Sarbath': { en: 'Nannari Sarbath', ta: 'நன்னாரி சர்பத்' },
+  'Elaneer': { en: 'Elaneer', ta: 'இளநீர்' },
+  'Tender Coconut': { en: 'Tender Coconut', ta: 'இளநீர்' },
+  'Jaljeera': { en: 'Jaljeera', ta: 'ஜல்ஜீரா' },
+  'Soda': { en: 'Soda', ta: 'சோடா' },
+  'Smoothie': { en: 'Smoothie', ta: 'ஸ்மூதி' },
+  'Milkshake': { en: 'Milkshake', ta: 'மில்க்ஷேக்' },
+  'Mocktail': { en: 'Mocktail', ta: 'மாக்டெய்ல்' },
+
+  // Snacks
+  'Samosa': { en: 'Samosa', ta: 'சமோசா' },
+  'Veg Samosa': { en: 'Veg Samosa', ta: 'வெஜ் சமோசா' },
+  'Fries': { en: 'Fries', ta: 'பிரெஞ்ச் பிரைஸ்' },
+  'French Fries': { en: 'French Fries', ta: 'பிரெஞ்ச் பிரைஸ்' },
+  'Cutlet': { en: 'Cutlet', ta: 'கட்லெட்' },
+  'Veg Cutlet': { en: 'Veg Cutlet', ta: 'வெஜ் கட்லெட்' },
+  'Chicken Cutlet': { en: 'Chicken Cutlet', ta: 'சிக்கன் கட்லெட்' },
+  'Fish Cutlet': { en: 'Fish Cutlet', ta: 'மீன் கட்லெட்' },
+  'Tikki': { en: 'Tikki', ta: 'டிக்கி' },
+  'Aloo Tikki': { en: 'Aloo Tikki', ta: 'ஆலு டிக்கி' },
+  'Pakoda': { en: 'Pakoda', ta: 'பக்கோடா' },
+  'Pakora': { en: 'Pakora', ta: 'பக்கோடா' },
+  'Onion Pakoda': { en: 'Onion Pakoda', ta: 'வெங்காய பக்கோடா' },
+  'Bajji': { en: 'Bajji', ta: 'பஜ்ஜி' },
+  'Onion Bajji': { en: 'Onion Bajji', ta: 'வெங்காய பஜ்ஜி' },
+  'Gobi 65': { en: 'Gobi 65', ta: 'கோபி 65' },
+  'Gobi Manchurian': { en: 'Gobi Manchurian', ta: 'கோபி மஞ்சூரியன்' },
+  'Veg Manchurian': { en: 'Veg Manchurian', ta: 'வெஜ் மஞ்சூரியன்' },
+  'Paneer 65': { en: 'Paneer 65', ta: 'பன்னீர் 65' },
+  'Chilli Paneer': { en: 'Chilli Paneer', ta: 'சில்லி பன்னீர்' },
+  'Mushroom 65': { en: 'Mushroom 65', ta: 'காளான் 65' },
+  'Baby Corn 65': { en: 'Baby Corn 65', ta: 'பேபி கார்ன் 65' },
+  'Spring Roll': { en: 'Spring Roll', ta: 'ஸ்பிரிங் ரோல்' },
+  'Momos': { en: 'Momos', ta: 'மோமோஸ்' },
+  'Veg Momos': { en: 'Veg Momos', ta: 'வெஜ் மோமோஸ்' },
+  'Chicken Momos': { en: 'Chicken Momos', ta: 'சிக்கன் மோமோஸ்' },
+  'Pizza': { en: 'Pizza', ta: 'பீட்சா' },
+  'Burger': { en: 'Burger', ta: 'பர்கர்' },
+  'Sundal': { en: 'Sundal', ta: 'சுண்டல்' },
+  'Salad': { en: 'Salad', ta: 'சாலட்' },
+  'Green Salad': { en: 'Green Salad', ta: 'கிரீன் சாலட்' },
+  'Soup': { en: 'Soup', ta: 'சூப்' },
+  'Tomato Soup': { en: 'Tomato Soup', ta: 'தக்காளி சூப்' },
+  'Veg Soup': { en: 'Veg Soup', ta: 'காய்கறி சூப்' },
+  'Sweet Corn Soup': { en: 'Sweet Corn Soup', ta: 'ஸ்வீட் கார்ன் சூப்' },
+  'Chicken Soup': { en: 'Chicken Soup', ta: 'சிக்கன் சூப்' },
+  'Mutton Soup': { en: 'Mutton Soup', ta: 'மட்டன் சூப்' },
 };
+
+// Common aliases mapping alternate English spellings to master dictionary keys
+const DISH_ALIASES: Record<string, string> = {
+  'idly': 'Idli',
+  'dosai': 'Dosa',
+  'vadai': 'Vada',
+  'medhu vadai': 'Medu Vada',
+  'medu vadai': 'Medu Vada',
+  'paruppu vadai': 'Masala Vada',
+  'sambar vadai': 'Sambar Vada',
+  'thayir vadai': 'Curd Vada',
+  'uppuma': 'Upma',
+  'semiya uppuma': 'Semiya Upma',
+  'rava uppuma': 'Rava Upma',
+  'poori': 'Poori',
+  'puri': 'Poori',
+  'poori masala': 'Poori Masala',
+  'puri masala': 'Poori Masala',
+  'uthappam': 'Uttapam',
+  'uthoppam': 'Uttapam',
+  'chappathi': 'Chapati',
+  'chapatis': 'Chapati',
+  'roti': 'Roti',
+  'rotis': 'Roti',
+  'barotta': 'Parotta',
+  'chicken briyani': 'Chicken Biryani',
+  'mutton briyani': 'Mutton Biryani',
+  'vegetable biryani': 'Veg Biryani',
+  'veg briyani': 'Veg Biryani',
+  'vegetable briyani': 'Veg Biryani',
+  'pulav': 'Pulao',
+  'veg pulav': 'Veg Pulao',
+  'vegetable pulav': 'Veg Pulao',
+  'thayir sadam': 'Curd Rice',
+  'elumichai sadam': 'Lemon Rice',
+  'thakkali sadam': 'Tomato Rice',
+  'sambar sadam': 'Sambar Rice',
+  'thengai sadam': 'Coconut Rice',
+  'puliyogare': 'Tamarind Rice',
+  'puliyodarai': 'Tamarind Rice',
+  'kheer': 'Payasam',
+  'gulab': 'Gulab Jamun',
+  'jamun': 'Gulab Jamun',
+  'laddu': 'Ladoo',
+  'chai': 'Tea',
+  'filter coffee': 'Filter Coffee',
+  'moru': 'Buttermilk',
+  'neer mor': 'Buttermilk',
+  'chaas': 'Buttermilk',
+  'mutton chukka': 'Mutton Sukka',
+  'chicken chukka': 'Chicken Sukka',
+  'meen kuzhambu': 'Fish Curry',
+  'meen varuval': 'Fish Fry',
+  'french fries': 'French Fries',
+  'fries': 'French Fries',
+};
+
+function normalizeText(text: string): string {
+  return text.trim().toLowerCase().replace(/\s+/g, ' ');
+}
 
 /**
  * Get translated text for given key and language.
@@ -356,3 +852,89 @@ export function translate(key: string, lang: Language = 'en', params?: Record<st
 
   return text;
 }
+
+/**
+ * Get display name for a dish in the specified language ('en' | 'ta').
+ * - In English: returns the English dish name (or falls back cleanly).
+ * - In Tamil: returns dish.name_ta if available, or looks up in master translation dictionary,
+ *   handling case insensitivity and common aliases, or falls back cleanly.
+ */
+export function getDishDisplayName(
+  dish: { name?: string; name_ta?: string | null; [key: string]: any } | string | undefined | null,
+  lang: Language = 'en'
+): string {
+  if (!dish) return '';
+  const isObj = typeof dish === 'object';
+  const name = (isObj ? (dish.name || dish.menu_items?.name) : dish) || '';
+  const nameTa = isObj ? (dish.name_ta || dish.menu_items?.name_ta) : undefined;
+
+  if (lang === 'ta') {
+    // 1. If explicit Tamil name is set on the dish, return it
+    if (nameTa && nameTa.trim()) {
+      return nameTa.trim();
+    }
+
+    const trimmed = name.trim();
+    if (!trimmed) return '';
+
+    // 2. Direct match in translations dictionary
+    if (translations[trimmed]?.ta) {
+      return translations[trimmed].ta;
+    }
+
+    // 3. Normalized / case-insensitive match
+    const norm = normalizeText(trimmed);
+    const directMatch = Object.entries(translations).find(([k]) => normalizeText(k) === norm);
+    if (directMatch && directMatch[1].ta) {
+      return directMatch[1].ta;
+    }
+
+    // 4. Check alias
+    const aliasKey = DISH_ALIASES[norm];
+    if (aliasKey && translations[aliasKey]?.ta) {
+      return translations[aliasKey].ta;
+    }
+
+    // 5. Fallback to English name
+    return trimmed;
+  }
+
+  // English mode ('en')
+  const trimmed = name.trim();
+  if (!trimmed) return '';
+
+  // If dish was stored in Tamil (e.g. custom dish added in Tamil), see if there's an English reverse translation
+  const reverseMatch = Object.entries(translations).find(([, val]) => val.ta === trimmed);
+  if (reverseMatch && reverseMatch[1].en) {
+    return reverseMatch[1].en;
+  }
+
+  return trimmed;
+}
+
+/**
+ * Returns the English canonical name for a given dish name (which might be in Tamil or alternate English alias).
+ */
+export function getEnglishDishName(name: string): string {
+  if (!name) return '';
+  const trimmed = name.trim();
+
+  // Check direct English
+  if (translations[trimmed]?.en) return translations[trimmed].en;
+
+  // Check case-insensitive
+  const norm = normalizeText(trimmed);
+  const directMatch = Object.entries(translations).find(([k]) => normalizeText(k) === norm);
+  if (directMatch) return directMatch[1].en;
+
+  // Check alias
+  const aliasKey = DISH_ALIASES[norm];
+  if (aliasKey && translations[aliasKey]?.en) return translations[aliasKey].en;
+
+  // Check reverse Tamil -> English
+  const reverseMatch = Object.entries(translations).find(([, val]) => val.ta === trimmed);
+  if (reverseMatch) return reverseMatch[1].en;
+
+  return trimmed;
+}
+

@@ -16,7 +16,7 @@ export default function ReviewOrderScreen() {
   const router = useRouter();
   const { data, update } = useNewEvent();
   const insets = useSafeAreaInsets();
-  const { t, language } = useLanguage();
+  const { t, language, getDishName } = useLanguage();
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
@@ -139,13 +139,13 @@ export default function ReviewOrderScreen() {
                   return (
                     <View key={cat}>
                       <Text style={styles.menuCatTitle}>
-                        {t(cat)} ({items.length} {t('ITEMS')}){mealTimeText}
+                        {t(cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase())} ({items.length} {t('ITEMS')}){mealTimeText}
                       </Text>
                       {items.map(item => {
                         const isEdited = (item as any).isPriceEdited || ((item as any).originalPrice !== undefined && item.price !== (item as any).originalPrice);
                         return (
                           <View key={item.id} style={styles.menuItemRow}>
-                            <Text style={styles.menuItemName}>{item.name}</Text>
+                            <Text style={styles.menuItemName}>{getDishName(item)}</Text>
                             <Text style={styles.menuItemPrice}>
                               ₹ {item.price || 0}
                               {isEdited && <Text style={styles.editedText}> ({t('edited')})</Text>}

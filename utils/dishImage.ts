@@ -1,3 +1,5 @@
+import { getEnglishDishName } from '@/utils/translations';
+
 // Specific keyword-to-image mappings for distinct dishes
 const SPECIFIC_DISH_IMAGES: { keywords: string[]; url: string }[] = [
   // Breakfast items
@@ -122,7 +124,8 @@ function hashString(str: string): number {
 
 export function getDishImageUrl(dishName: string): string {
   if (!dishName) return CATEGORY_POOLS.general[0];
-  const lower = dishName.toLowerCase().trim();
+  const englishName = getEnglishDishName(dishName) || dishName;
+  const lower = englishName.toLowerCase().trim();
 
   // 1. First check specific dish keyword matches
   for (const entry of SPECIFIC_DISH_IMAGES) {

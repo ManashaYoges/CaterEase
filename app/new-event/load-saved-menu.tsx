@@ -85,6 +85,7 @@ export default function LoadSavedMenuScreen() {
         const selectedItems: SelectedMenuItem[] = itemsForThisDate.map(mi => ({
           id: mi.menu_item_id,
           name: mi.menu_items?.name || 'Item',
+          name_ta: mi.menu_items?.name_ta || null,
           image_url: mi.menu_items?.image_url || null,
           price: mi.price_override || 0,
           mealCategory: mi.meal_type

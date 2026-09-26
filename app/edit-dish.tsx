@@ -8,6 +8,7 @@ import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { getDishDisplayName, getEnglishDishName } from '@/utils/translations';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import KeyboardAwareScrollView from '@/components/KeyboardAwareScrollView';
 import { F, scaleFont } from '@/utils/fonts';
@@ -27,7 +28,7 @@ export default function EditDishScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { t, language, getDishName } = useLanguage();
 
   const nameRef = useRef<TextInput>(null);
   const priceRef = useRef<TextInput>(null);
@@ -35,6 +36,7 @@ export default function EditDishScreen() {
 
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [originalDish, setOriginalDish] = useState<MenuItem | null>(null);
   
   const [name, setName] = useState('');
   const [menuType, setMenuType] = useState<'veg' | 'non_veg'>('veg');
@@ -55,8 +57,9 @@ export default function EditDishScreen() {
 
         const dishDoc = await getDoc(doc(db, 'menu_items', id));
         if (dishDoc.exists()) {
-          const data = dishDoc.data() as MenuItem;
-          setName(data.name || '');
+          const data = { id: dishDoc.id, ...dishDoc.data() } as MenuItem;
+          setOriginalDish(data);
+          setName(language === 'ta' ? (data.name_ta || getDishDisplayName(data.name, 'ta') || data.name || '') : (data.name || ''));
           const mt = data.menu_type === 'non_veg' ? 'non_veg' : 'veg';
           setMenuType(mt);
           setMealType(data.meal_type || 'lunch');
@@ -92,8 +95,8 @@ export default function EditDishScreen() {
     if (!user || !id) return;
     setSaving(true);
     try {
-      await updateDoc(doc(db, 'menu_items', id), {
-        name: name.trim(),
+      const trimmed = name.trim();
+      let updatePayload: any = {
         menu_type: menuType,
         categoryType: targetCategoryType,
         meal_type: mealType,
@@ -101,7 +104,20 @@ export default function EditDishScreen() {
         price: parseFloat(price) || 0,
         description: description.trim() || null,
         updated_at: new Date().toISOString(),
-      });
+      };
+
+      if (language === 'ta') {
+        updatePayload.name_ta = trimmed;
+        // If English name didn't exist or matched what was entered, try to get English name
+        if (!originalDish?.name || originalDish.name === trimmed) {
+          updatePayload.name = getEnglishDishName(trimmed);
+        }
+      } else {
+        updatePayload.name = trimmed;
+        updatePayload.name_ta = originalDish?.name_ta || getDishDisplayName(trimmed, 'ta');
+      }
+
+      await updateDoc(doc(db, 'menu_items', id), updatePayload);
       router.back();
     } catch (err: any) {
       setErrors({ general: err.message || 'Failed to update dish' });
@@ -113,7 +129,7 @@ export default function EditDishScreen() {
   const handleDelete = () => {
     Alert.alert(
       t('Delete Dish'),
-      t('Are you sure you want to delete "{name}"?', { name }),
+      t('Are you sure you want to delete "{name}"?', { name: getDishName(name) }),
       [
         { text: t('Cancel'), style: 'cancel' },
         {

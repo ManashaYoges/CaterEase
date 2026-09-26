@@ -27,7 +27,7 @@ export default function DishesScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { t, getDishName } = useLanguage();
 
   const [menuType, setMenuType] = useState<'veg' | 'non_veg'>('veg');
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -202,7 +202,7 @@ export default function DishesScreen() {
                                   menuType === 'non_veg' && { backgroundColor: '#DC2626' }
                                 ]} />
                                 <View style={styles.dishInfo}>
-                                  <Text style={styles.dishName}>{item.name}</Text>
+                                  <Text style={styles.dishName}>{getDishName(item)}</Text>
                                   {item.description ? (
                                     <Text style={styles.dishDesc}>{item.description}</Text>
                                   ) : null}
@@ -219,7 +219,7 @@ export default function DishesScreen() {
                                   </TouchableOpacity>
                                   <TouchableOpacity
                                     style={styles.actionIconBtn}
-                                    onPress={() => handleDeleteDish(item.id, item.name)}
+                                    onPress={() => handleDeleteDish(item.id, getDishName(item))}
                                   >
                                     <Trash2 size={14} color="#EF4444" />
                                   </TouchableOpacity>

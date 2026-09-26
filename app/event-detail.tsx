@@ -29,7 +29,7 @@ export default function EventDetailScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { update } = useNewEvent();
-  const { t, language } = useLanguage();
+  const { t, language, getDishName } = useLanguage();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [menuItems, setMenuItems] = useState<EventMenuItem[]>([]);
@@ -105,6 +105,7 @@ export default function EventDetailScreen() {
         const selectedItems: SelectedMenuItem[] = itemsForThisDate.map((mi: any) => ({
           id: mi.menu_item_id,
           name: mi.menu_items?.name || 'Item',
+          name_ta: mi.menu_items?.name_ta || null,
           image_url: mi.menu_items?.image_url || null,
           price: mi.price_override ?? mi.menu_items?.price ?? 0,
           mealCategory: mi.meal_type
@@ -461,7 +462,7 @@ export default function EventDetailScreen() {
                         {items.map(item => (
                           <View key={item.id} style={styles.mealItemChip}>
                             <View style={styles.mealItemDot} />
-                            <Text style={styles.mealItemText}>{item.menu_items?.name}</Text>
+                            <Text style={styles.mealItemText}>{getDishName(item.menu_items || item)}</Text>
                           </View>
                         ))}
                       </View>

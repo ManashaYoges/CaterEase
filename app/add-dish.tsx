@@ -8,6 +8,7 @@ import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { getDishDisplayName, getEnglishDishName } from '@/utils/translations';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import KeyboardAwareScrollView from '@/components/KeyboardAwareScrollView';
 import { F, scaleFont } from '@/utils/fonts';
@@ -27,7 +28,7 @@ export default function AddDishScreen() {
   const params = useLocalSearchParams<{ menuType?: string; category?: string }>();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const nameRef = useRef<TextInput>(null);
   const priceRef = useRef<TextInput>(null);
@@ -79,9 +80,14 @@ export default function AddDishScreen() {
     if (!user) return;
     setSaving(true);
     try {
+      const trimmed = name.trim();
+      const tamilName = language === 'ta' ? trimmed : getDishDisplayName(trimmed, 'ta');
+      const englishName = language === 'ta' ? getEnglishDishName(trimmed) : trimmed;
+
       await addDoc(collection(db, 'menu_items'), {
         user_id: user.uid,
-        name: name.trim(),
+        name: englishName,
+        name_ta: tamilName,
         menu_type: menuType,
         categoryType: targetCategoryType,
         meal_type: mealType,

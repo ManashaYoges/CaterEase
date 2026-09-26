@@ -5,7 +5,7 @@ import { NewEventData } from '@/context/NewEventContext';
 import { doc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { Event } from '@/types';
-import { translations } from '@/utils/translations';
+import { translations, getDishDisplayName } from '@/utils/translations';
 
 async function getPDFLanguage(): Promise<'en' | 'ta'> {
   try {

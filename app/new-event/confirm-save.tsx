@@ -15,6 +15,7 @@ import KeyboardAwareScrollView from '@/components/KeyboardAwareScrollView';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { useLanguage } from '@/context/LanguageContext';
+import { getDishDisplayName } from '@/utils/translations';
 import { F, scaleFont } from '@/utils/fonts';
 import { T } from '@/utils/typography';
 import { saveCustomEventType } from '@/utils/eventTypeStorage';
@@ -232,7 +233,11 @@ export default function ConfirmSaveScreen() {
                     meal_time: mealTimings[item.mealCategory.toLowerCase()] || null,
                     meal_category: (item as any).meal_category || 'main',
                     price_override: item.price,
-                    menu_items: { name: item.name, image_url: item.image_url || null },
+                    menu_items: {
+                      name: item.name,
+                      name_ta: (item as any).name_ta || getDishDisplayName(item, 'ta'),
+                      image_url: item.image_url || null,
+                    },
                     user_id: user.uid,
                   })
                 )

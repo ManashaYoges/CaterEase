@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { getDishImageUrl } from '@/utils/dishImage';
+import { getDishDisplayName, getEnglishDishName } from '@/utils/translations';
 import { F, scaleFont } from '@/utils/fonts';
 import { matchesCategory } from '@/utils/categories';
 import OnboardingGuidancePopup from '@/components/OnboardingGuidancePopup';
@@ -76,7 +77,7 @@ export default function BuildMenuScreen() {
   const { data, update } = useNewEvent();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, language, getDishName } = useLanguage();
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
@@ -179,7 +180,11 @@ export default function BuildMenuScreen() {
     let items = menuItems.filter(i => isDishInMenuType(i, activeMenuType) && isDishInSection(i, currentSection));
     if (searchText.trim()) {
       const q = searchText.toLowerCase().trim();
-      items = items.filter(i => i.name.toLowerCase().includes(q));
+      items = items.filter(i => {
+        const eng = (i.name || '').toLowerCase();
+        const ta = (getDishDisplayName(i, 'ta') || '').toLowerCase();
+        return eng.includes(q) || ta.includes(q);
+      });
     }
     return items;
   }, [menuItems, activeMenuType, currentSection, searchText]);
@@ -290,10 +295,15 @@ export default function BuildMenuScreen() {
       }
     }
 
+    const trimmed = newDishName.trim();
+    const tamilName = language === 'ta' ? trimmed : getDishDisplayName(trimmed, 'ta');
+    const englishName = language === 'ta' ? getEnglishDishName(trimmed) : trimmed;
+
     try {
       const docRef = await addDoc(collection(db, 'menu_items'), {
         user_id: user.uid,
-        name: newDishName.trim(),
+        name: englishName,
+        name_ta: tamilName,
         menu_type: targetMenuType,
         categoryType: targetCatType,
         meal_type: targetMealType,
@@ -308,7 +318,8 @@ export default function BuildMenuScreen() {
       const newItem: MenuItem = {
         id: docRef.id,
         user_id: user.uid,
-        name: newDishName.trim(),
+        name: englishName,
+        name_ta: tamilName,
         menu_type: targetMenuType,
         categoryType: targetCatType,
         meal_type: targetMealType,
@@ -334,7 +345,7 @@ export default function BuildMenuScreen() {
   const handleDeleteDish = (id: string, name: string) => {
     Alert.alert(
       t('Delete Dish'),
-      t('Are you sure you want to delete "{name}"?', { name }),
+      t('Are you sure you want to delete "{name}"?', { name: getDishName(name) }),
       [
         { text: t('Cancel'), style: 'cancel' },
         {
@@ -684,7 +695,7 @@ export default function BuildMenuScreen() {
                           numberOfLines={2}
                           ellipsizeMode="tail"
                         >
-                          {item.name}
+                          {getDishName(item)}
                         </Text>
 
                         {/* Selected State Checkmark Badge */}
@@ -755,7 +766,7 @@ export default function BuildMenuScreen() {
                       style={styles.selectedDishImg}
                     />
                     <View style={styles.selectedDishInfo}>
-                      <Text style={styles.selectedDishName} numberOfLines={2} ellipsizeMode="tail">{item.name}</Text>
+                      <Text style={styles.selectedDishName} numberOfLines={2} ellipsizeMode="tail">{getDishName(item)}</Text>
                       {item.price !== undefined && item.price !== null && (
                         <Text style={styles.selectedDishPrice}>
                           ₹{item.price}
@@ -909,7 +920,7 @@ export default function BuildMenuScreen() {
       >
         <Pressable style={styles.modalCenterOverlay} onPress={() => setActiveMenuDish(null)}>
           <Pressable style={styles.modalCardBox} onPress={e => e.stopPropagation()}>
-            <Text style={styles.modalHeaderTitle} numberOfLines={1}>{activeMenuDish?.name}</Text>
+            <Text style={styles.modalHeaderTitle} numberOfLines={1}>{getDishName(activeMenuDish)}</Text>
             <Text style={styles.modalSubtitle}>{t('Dish Options')}</Text>
 
             <TouchableOpacity
@@ -941,8 +952,8 @@ export default function BuildMenuScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Trash2 size={16} color="#EF4444" />
-              <Text style={[styles.dishOptionRowText, { color: '#EF4444' }]}>{t('Delete')}</Text>
+              <Trash2 size={16} color="#DC2626" />
+              <Text style={[styles.dishOptionRowText, { color: '#DC2626' }]}>{t('Delete')}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -959,7 +970,7 @@ export default function BuildMenuScreen() {
           <Pressable style={styles.modalCardBox} onPress={e => e.stopPropagation()}>
             <Text style={styles.modalHeaderTitle}>{t('Edit Price')}</Text>
             <Text style={styles.modalSubtitle} numberOfLines={1}>
-              {editingDish?.name} • {t('Original')}: ₹{editingDish?.originalPrice ?? editingDish?.price ?? 0}
+              {getDishName(editingDish)} • {t('Original')}: ₹{editingDish?.originalPrice ?? editingDish?.price ?? 0}
             </Text>
 
             <TextInput
@@ -1023,7 +1034,7 @@ export default function BuildMenuScreen() {
           <Pressable style={styles.modalCardBox} onPress={e => e.stopPropagation()}>
             <Text style={styles.modalHeaderTitle}>{t('Delete Selected Dish')}</Text>
             <Text style={[styles.modalSubtitle, { color: '#374151', marginBottom: 8 }]}>
-              {t('Are you sure you want to delete "{name}"?', { name: deletingDish?.name || '' })}
+              {t('Are you sure you want to delete "{name}"?', { name: getDishName(deletingDish) || '' })}
             </Text>
 
             <View style={styles.dialogActionRow}>
